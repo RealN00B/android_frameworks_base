@@ -90,5 +90,8 @@ public class SystemSettings {
         Settings.System.USE_OLD_MOBILETYPE,
         Settings.System.TORCH_POWER_BUTTON_GESTURE,
         Settings.System.LOCKSCREEN_BATTERY_INFO,
+        Settings.System.STATUS_BAR_LOGO,
+        Settings.System.STATUS_BAR_LOGO_POSITION,
+        Settings.System.STATUS_BAR_LOGO_STYLE,
     };
 }
