@@ -6296,6 +6296,13 @@ public final class Settings {
         public static final String SMART_5G = "smart_5g";
 
        /**
+        /**
+         * Sensor block per-package
+         * @hide
+         */
+        public static final String SENSOR_BLOCK = "sensor_block";
+
+        /**
          * Whether to settings custom transitions PageTileLayout
          * @hide
          */
