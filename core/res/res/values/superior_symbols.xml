@@ -54,6 +54,7 @@
 
     <!-- Battery Leds -->
     <java-symbol type="bool" name="config_intrusiveBatteryLed" />
+    <java-symbol type="bool" name="config_hasNotificationLed" />
 
     <!-- Alert slider -->
     <java-symbol type="string" name="alert_slider_state_path" />
