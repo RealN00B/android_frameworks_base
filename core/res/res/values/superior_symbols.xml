@@ -163,4 +163,7 @@
     <java-symbol type="string" name="config_SmartChargingSysfsNode" />
     <java-symbol type="string" name="config_SmartChargingSuspendValue" />
     <java-symbol type="string" name="config_SmartChargingResumeValue" />
+    
+    <!-- Whether the device supports Smart Pixels -->
+    <java-symbol type="bool" name="config_supportSmartPixels" />
 </resources>
