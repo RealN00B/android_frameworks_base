@@ -6076,6 +6076,21 @@ public final class Settings {
          * @hide
          */
         public static final String FP_ERROR_VIBRATE = "fp_error_vibrate";
+        
+        /**
+         * @hide
+         */
+        public static final String SMART_CHARGING = "smart_charging";
+
+        /**
+         * @hide
+         */
+        public static final String SMART_CHARGING_LEVEL = "smart_charging_level";
+
+        /**
+         * @hide
+         */
+        public static final String SMART_CHARGING_RESET_STATS = "smart_charging_reset_stats";
 
         /**
          * Keys we no longer back up under the current schema, but want to continue to
