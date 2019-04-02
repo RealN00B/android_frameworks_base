@@ -79,4 +79,8 @@
 
     <!-- AI services open-source network component can only bind back to the core package. -->
     <allow-association target="com.google.android.as.oss" allowed="com.google.android.as" />
+
+    <!-- Whitelist of what components are permitted to run in the background -->
+    <allow-in-power-save package="com.android.deskclock" />
+
 </config>
