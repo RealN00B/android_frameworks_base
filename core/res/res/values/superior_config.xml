@@ -163,5 +163,8 @@
 
     <!-- Screen off delay -->
     <integer name="config_screen_off_delay">0</integer>
+    
+    <!-- Default value for Ambient Pulse light color -->
+    <integer name="config_ambientNotificationDefaultColor">0xFF3980FF</integer>
             
 </resources>
