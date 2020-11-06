@@ -225,6 +225,11 @@ final class DefaultPermissionGrantPolicy {
     static {
         NOTIFICATION_PERMISSIONS.add(Manifest.permission.POST_NOTIFICATIONS);
     }
+    
+    private static final Set<String> SUSPEND_APP_PERMISSIONS = new ArraySet<>();
+    static {
+        SUSPEND_APP_PERMISSIONS.add(Manifest.permission.SUSPEND_APPS);
+    }
 
     private static final Set<String> WALLPAPER_PERMISSIONS = new ArraySet<>();
     static {
@@ -1066,6 +1071,11 @@ final class DefaultPermissionGrantPolicy {
         // Settings Services
         grantSystemFixedPermissionsToSystemPackage(pm, "com.google.android.settings.intelligence", userId,
                 PHONE_PERMISSIONS, ALWAYS_LOCATION_PERMISSIONS);
+
+        // Flipendo
+        grantSystemFixedPermissionsToSystemPackage(pm,
+                getDefaultProviderAuthorityPackage("com.google.android.flipendo", userId),
+                userId, SUSPEND_APP_PERMISSIONS);
     }
 
     private String getDefaultSystemHandlerActivityPackageForCategory(PackageManagerWrapper pm,
