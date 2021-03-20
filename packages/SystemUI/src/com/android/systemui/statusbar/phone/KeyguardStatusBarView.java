@@ -159,7 +159,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
                 getResources().getDimensionPixelSize(R.dimen.signal_cluster_battery_padding),
                 mStatusIconContainer.getPaddingBottom()
         );
-
+        
         updateKeyguardStatusBarHeight();
     }
 
