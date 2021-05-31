@@ -33,6 +33,7 @@ import com.android.systemui.qs.tiles.WifiTile
 import com.android.systemui.qs.tiles.PowerShareTile
 import com.android.systemui.qs.tiles.PreferredNetworkTile
 import com.android.systemui.qs.tiles.RefreshRateTile
+import com.android.systemui.qs.tiles.SleepModeTile
 
 import dagger.Binds
 import dagger.Module
@@ -137,5 +138,11 @@ interface SuperiorOSModule {
     @IntoMap
     @StringKey(RefreshRateTile.TILE_SPEC)
     fun bindRefreshRateTile(refreshRateTile: RefreshRateTile): QSTileImpl<*>
+    
+    /** Inject SleepModeTile into tileMap in QSModule */
+    @Binds
+    @IntoMap
+    @StringKey(SleepModeTile.TILE_SPEC)
+    fun bindSleepModeTile(sleepModeTile: SleepModeTile): QSTileImpl<*>
 
 }
