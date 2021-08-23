@@ -5913,6 +5913,12 @@ public final class Settings {
         public static final String RIGHT_VERTICAL_BACK_SWIPE_APP_ACTIVITY_ACTION = "right_vertical_back_swipe_app_activity_action";
 
         /**
+         * Select which System charging animation bg to display
+         * @hide
+         */
+        public static final String CHARGING_ANIMATION_BG = "charging_animation_bg";
+
+	/**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *
