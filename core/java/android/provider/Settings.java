@@ -6458,6 +6458,11 @@ public final class Settings {
          * @hide
          */
         public static final String QS_BRIGHTNESS_SLIDER_HAPTIC = "qs_brightness_slider_haptic";
+        
+        /**
+         * @hide
+         */
+        public static final String LOCKSCREEN_WEATHER_ENABLED = "lockscreen_weather_enabled";
 
         /**
          * These are all public system settings
