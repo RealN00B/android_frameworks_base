@@ -835,7 +835,13 @@ public class ClipboardService extends SystemService {
                     ClipDescription.CLASSIFICATION_NOT_PERFORMED);
             return;
         }
-        mWorkerHandler.post(() -> doClassification(text, clip, classifier, userId));
+        mWorkerHandler.post(() -> {
+            try {
+                doClassification(text, clip, classifier, userId);
+            } catch (SecurityException e) {
+                Slog.e(TAG, "Security Exception: ", e);
+            }
+        });
     }
 
     @WorkerThread
