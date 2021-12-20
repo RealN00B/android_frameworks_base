@@ -601,7 +601,7 @@ public final class MediaCodecInfo {
         public static final String FEATURE_AdaptivePlayback       = "adaptive-playback";
 
         /**
-         * <b>video decoder only</b>: codec supports secure decryption.
+         * <b>video or audio decoder only</b>: codec supports secure decryption.
          */
         public static final String FEATURE_SecurePlayback         = "secure-playback";
 
