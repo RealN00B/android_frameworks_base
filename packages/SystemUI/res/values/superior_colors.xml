@@ -10,4 +10,5 @@
     
     <!-- QS Header Images -->
     <color name="puteh_ireng">#ffffffff</color>
+    <color name="qs_ripple_color">@android:color/system_accent1_400</color>
 </resources>
