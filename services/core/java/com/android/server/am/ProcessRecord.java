@@ -1116,7 +1116,17 @@ class ProcessRecord implements WindowProcessListener {
                 mService.mProcessList.noteAppKill(this, reasonCode, subReason, description);
                 EventLog.writeEvent(EventLogTags.AM_KILL,
                         userId, mPid, processName, mState.getSetAdj(), reason);
-                Process.killProcessQuiet(mPid);
+                int tgid = Process.getThreadGroupLeader(mPid);
+                // Sometimes lmkd kills an app process, and a new thread of system_server
+                // or netd reuses the pid of the former and kills the same app process again
+                // by some policies before the binderDied of this app arrives, then
+                // the system will die.
+                if (tgid == mPid) {
+                    Process.killProcessQuiet(mPid);
+                } else {
+                    Slog.w(TAG, "Failed to kill, mPid = " + mPid + " tgid = " + tgid);
+                }
+                // killProcessGroup is always needed to kill the processes forked by apps.
                 ProcessList.killProcessGroup(uid, mPid);
             } else {
                 mPendingStart = false;
