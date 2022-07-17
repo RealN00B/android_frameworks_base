@@ -299,11 +299,6 @@ public class CentralSurfacesImpl implements CoreStartable, PackageChangedListene
     private static final String QS_TRANSPARENCY =
             "system:" + Settings.System.QS_TRANSPARENCY;
 
-    private static final String BANNER_ACTION_CANCEL =
-            "com.android.systemui.statusbar.banner_action_cancel";
-    private static final String BANNER_ACTION_SETUP =
-            "com.android.systemui.statusbar.banner_action_setup";
-
     private static final String LESS_BORING_HEADS_UP =
             "system:" + Settings.System.LESS_BORING_HEADS_UP;
     private static final String NOTIFICATION_MATERIAL_DISMISS =
@@ -311,7 +306,14 @@ public class CentralSurfacesImpl implements CoreStartable, PackageChangedListene
     private static final String NOTIFICATION_MATERIAL_DISMISS_STYLE =
             "system:" + Settings.System.NOTIFICATION_MATERIAL_DISMISS_STYLE;
     private static final String NOTIFICATION_MATERIAL_DISMISS_BGSTYLE =
-            "system:" + Settings.System.NOTIFICATION_MATERIAL_DISMISS_BGSTYLE;
+            "system:" + Settings.System.NOTIFICATION_MATERIAL_DISMISS_BGSTYLE;            
+    private static final String RETICKER_STATUS =
+            "system:" + Settings.System.RETICKER_STATUS;
+
+    private static final String BANNER_ACTION_CANCEL =
+            "com.android.systemui.statusbar.banner_action_cancel";
+    private static final String BANNER_ACTION_SETUP =
+            "com.android.systemui.statusbar.banner_action_setup";
 
     private static final int MSG_OPEN_SETTINGS_PANEL = 1002;
     private static final int MSG_LAUNCH_TRANSITION_TIMEOUT = 1003;
@@ -985,6 +987,7 @@ public class CentralSurfacesImpl implements CoreStartable, PackageChangedListene
         mTunerService.addTunable(this, NOTIFICATION_MATERIAL_DISMISS);
         mTunerService.addTunable(this, NOTIFICATION_MATERIAL_DISMISS_STYLE);
         mTunerService.addTunable(this, NOTIFICATION_MATERIAL_DISMISS_BGSTYLE);
+        mTunerService.addTunable(this, RETICKER_STATUS);
 
         mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
 
@@ -4367,6 +4370,11 @@ public class CentralSurfacesImpl implements CoreStartable, PackageChangedListene
                 mClearAllBgStyle =
                         TunerService.parseInteger(newValue, 0);
                 updateDismissAllButton();
+                break;
+            case RETICKER_STATUS:
+                boolean reTicker =
+                        TunerService.parseIntegerSwitch(newValue, false);
+                mNotificationInterruptStateProvider.setUseReticker(reTicker);
                 break;
             default:
                 break;
