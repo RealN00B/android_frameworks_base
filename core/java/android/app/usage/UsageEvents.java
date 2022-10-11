@@ -753,6 +753,7 @@ public final class UsageEvents implements Parcelable {
             mParcel.setDataPosition(positionInParcel);
         }
         mIncludeTaskRoots = true;
+        data.recycle();
     }
 
     /**
