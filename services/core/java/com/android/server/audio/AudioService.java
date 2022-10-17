@@ -2395,10 +2395,6 @@ public class AudioService extends IAudioService.Stub
             Log.w(TAG, "audioFormat to enable is not a surround format.");
             return false;
         }
-        if (mContext.checkCallingOrSelfPermission(android.Manifest.permission.WRITE_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) {
-            throw new SecurityException("Missing WRITE_SETTINGS permission");
-        }
 
         final long token = Binder.clearCallingIdentity();
         try {
@@ -2466,11 +2462,6 @@ public class AudioService extends IAudioService.Stub
     /** @see AudioManager#getEncodedSurroundMode() */
     @Override
     public int getEncodedSurroundMode(int targetSdkVersion) {
-        if (mContext.checkCallingOrSelfPermission(android.Manifest.permission.WRITE_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) {
-            throw new SecurityException("Missing WRITE_SETTINGS permission");
-        }
-
         final long token = Binder.clearCallingIdentity();
         try {
             synchronized (mSettingsLock) {
