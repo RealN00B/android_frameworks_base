@@ -42,7 +42,7 @@ import static com.android.systemui.statusbar.StatusBarState.KEYGUARD;
 import static com.android.systemui.statusbar.StatusBarState.SHADE;
 import static com.android.systemui.statusbar.StatusBarState.SHADE_LOCKED;
 import static com.android.systemui.statusbar.VibratorHelper.TOUCH_VIBRATION_ATTRIBUTES;
-import static com.android.systemui.statusbar.notification.stack.NotificationStackScrollLayout.ROWS_HIGH_PRIORITY;
+import static com.android.systemui.statusbar.notification.stack.NotificationStackScrollLayout.ROWS_ALL;
 import static com.android.systemui.statusbar.notification.stack.StackStateAnimator.ANIMATION_DURATION_FOLD_TO_AOD;
 import static com.android.systemui.util.DumpUtilsKt.asIndenting;
 import static com.android.systemui.util.kotlin.JavaAdapterKt.collectFlow;
@@ -585,6 +585,7 @@ public final class NotificationPanelViewController implements Dumpable {
     private final NotificationListContainer mNotificationListContainer;
     private final NotificationStackSizeCalculator mNotificationStackSizeCalculator;
     private final NPVCDownEventState.Buffer mLastDownEvents;
+    private NotificationStackScrollLayout mStackScrollLayout;
     private final KeyguardBottomAreaViewModel mKeyguardBottomAreaViewModel;
     private final KeyguardBottomAreaInteractor mKeyguardBottomAreaInteractor;
     private float mMinExpandHeight;
@@ -1082,6 +1083,7 @@ public final class NotificationPanelViewController implements Dumpable {
 
         NotificationStackScrollLayout stackScrollLayout = mView.findViewById(
                 R.id.notification_stack_scroller);
+        mStackScrollLayout = stackScrollLayout;
         mNotificationStackScrollLayoutController.attach(stackScrollLayout);
         mNotificationStackScrollLayoutController.setOnHeightChangedListener(
                 new NsslHeightChangedListener());
@@ -3187,7 +3189,10 @@ public final class NotificationPanelViewController implements Dumpable {
                 Settings.System.AOD_NOTIFICATION_PULSE, 0, UserHandle.USER_CURRENT) != 0;
         boolean aodEnabled = Settings.Secure.getIntForUser(resolver,
                 Settings.Secure.DOZE_ALWAYS_ON, 0, UserHandle.USER_CURRENT) == 1;
-        ExpandableNotificationRow row = mNotificationStackScrollLayoutController.getFirstActiveClearableNotifications(ROWS_HIGH_PRIORITY);
+        ExpandableNotificationRow row;
+        row = aodEnabled
+                ? mStackScrollLayout.getFirstActiveClearableNotifications(ROWS_ALL)
+                : mStackScrollLayout.getLastExpandableNotificationRow();
         boolean activeNotif = row != null;
         int pulseReason = Settings.System.getIntForUser(resolver,
                 Settings.System.PULSE_TRIGGER_REASON, DozeLog.PULSE_REASON_NONE, UserHandle.USER_CURRENT);

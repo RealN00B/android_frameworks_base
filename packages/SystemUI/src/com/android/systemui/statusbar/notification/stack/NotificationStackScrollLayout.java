@@ -579,6 +579,8 @@ public class NotificationStackScrollLayout extends ViewGroup implements Dumpable
     private boolean mHasFilteredOutSeenNotifications;
     private boolean mShowDimissButton;
 
+    private ExpandableNotificationRow mLastExpandableRow;
+
     private final ExpandableView.OnHeightChangedListener mOnChildHeightChangedListener =
             new ExpandableView.OnHeightChangedListener() {
                 @Override
@@ -778,6 +780,22 @@ public class NotificationStackScrollLayout extends ViewGroup implements Dumpable
     @ShadeViewRefactor(RefactorComponent.SHADE_VIEW)
     boolean hasActiveClearableNotifications(@SelectedRows int selection) {
         return mController.hasActiveClearableNotifications(selection);
+    }
+    
+    /** @hide */
+    public ExpandableNotificationRow getFirstActiveClearableNotifications(@SelectedRows int selection) {
+        int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = getChildAt(i);
+            if (!(child instanceof ExpandableNotificationRow)) {
+                continue;
+            }
+            final ExpandableNotificationRow row = (ExpandableNotificationRow) child;
+            if (row.getEntry().isClearable() && matchesSelection(row, selection)) {
+                return row;
+            }
+        }
+        return null;
     }
 
     @ShadeViewRefactor(RefactorComponent.SHADE_VIEW)
@@ -3160,8 +3178,13 @@ public class NotificationStackScrollLayout extends ViewGroup implements Dumpable
         if (child instanceof ExpandableNotificationRow) {
             ExpandableNotificationRow row = (ExpandableNotificationRow) child;
             row.setDismissUsingRowTranslationX(mDismissUsingRowTranslationX);
-
+            mLastExpandableRow = row;
         }
+    }
+
+    /** @hide */
+    public ExpandableNotificationRow getLastExpandableNotificationRow() {
+        return mLastExpandableRow;
     }
 
     @ShadeViewRefactor(RefactorComponent.COORDINATOR)
