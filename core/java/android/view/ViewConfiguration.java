@@ -17,6 +17,7 @@
 package android.view;
 
 import android.annotation.FloatRange;
+import android.annotation.MainThread;
 import android.annotation.NonNull;
 import android.annotation.TestApi;
 import android.annotation.UiContext;
@@ -42,6 +43,7 @@ import com.android.internal.annotations.GuardedBy;
 /**
  * Contains methods to standard constants used in the UI for timeouts, sizes, and distances.
  */
+@MainThread
 public class ViewConfiguration {
     private static final String TAG = "ViewConfiguration";
 
