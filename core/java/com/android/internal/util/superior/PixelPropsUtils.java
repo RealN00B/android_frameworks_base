@@ -210,7 +210,7 @@ public class PixelPropsUtils {
         }
     }
 
-    private static void setPropValue(String key, Object value) {
+    static void setPropValue(String key, Object value) {
         try {
             if (DEBUG) Log.d(TAG, "Defining prop " + key + " to " + value.toString());
             Field field = Build.class.getDeclaredField(key);
@@ -278,5 +278,9 @@ public class PixelPropsUtils {
         if (sIsFinsky) {
             throw new UnsupportedOperationException();
         }
+    }
+    
+     static void dlog(String msg) {
+      if (DEBUG) Log.d(TAG, msg);
     }
 }
