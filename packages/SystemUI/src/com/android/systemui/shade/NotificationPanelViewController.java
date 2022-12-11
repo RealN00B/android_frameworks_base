@@ -4615,6 +4615,15 @@ public final class NotificationPanelViewController implements Dumpable {
         updateKeyguardStatusViewAlignment(/* animate= */ true);
     }
 
+    private void showAodContent(boolean show) {
+        if (DEBUG_PULSE_LIGHT) {
+            Log.d(TAG, "showAodContent show = " + show);
+        }
+        mKeyguardStatusViewController.setViewVisible(show);
+        mKeyguardStatusBar.setVisibility(show ? View.VISIBLE : View.INVISIBLE);
+        mKeyguardIndicationController.setVisible(show);
+    }
+
     public void setAmbientIndicationTop(int ambientIndicationTop, boolean ambientTextVisible) {
         int ambientIndicationBottomPadding = 0;
         if (ambientTextVisible) {
@@ -4626,15 +4635,6 @@ public final class NotificationPanelViewController implements Dumpable {
             updateMaxDisplayedNotifications(true);
         }
     }
-
-    private void showAodContent(boolean show) {
-        if (DEBUG_PULSE_LIGHT) {
-            Log.d(TAG, "showAodContent show = " + show);
-        }
-        mKeyguardStatusBar.setVisibility(show ? View.VISIBLE : View.INVISIBLE);
-        mKeyguardBottomArea.setVisibility(show ? View.VISIBLE : View.INVISIBLE);
-    }
-
 
     public void dozeTimeTick() {
         mLockIconViewController.dozeTimeTick();
