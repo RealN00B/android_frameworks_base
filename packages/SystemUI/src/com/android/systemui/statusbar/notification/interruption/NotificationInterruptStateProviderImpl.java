@@ -30,6 +30,7 @@ import android.database.ContentObserver;
 import android.hardware.display.AmbientDisplayConfiguration;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.UserHandle;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
 import android.provider.Telephony.Sms;
@@ -504,7 +505,7 @@ public class NotificationInterruptStateProviderImpl implements NotificationInter
      * @return true if the entry should ambient pulse, false otherwise
      */
     private boolean shouldHeadsUpWhenDozing(NotificationEntry entry, boolean log) {
-        if (!mAmbientDisplayConfiguration.pulseOnNotificationEnabled(mUserTracker.getUserId())) {
+        if (!mAmbientDisplayConfiguration.userPulseOnNotificationEnabled(UserHandle.USER_CURRENT)) {
             if (log) mLogger.logNoPulsingSettingDisabled(entry);
             return false;
         }
