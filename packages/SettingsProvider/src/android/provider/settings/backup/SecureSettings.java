@@ -224,5 +224,6 @@ public class SecureSettings {
         Settings.Secure.POWER_MENU_HIDE_ON_SECURE,
         Settings.Secure.IGNORE_AUTH_CONFIRMATION,
         Settings.Secure.SHOW_WIFI_STANDARD_ICON,
+        Settings.Secure.DOZE_FOR_NOTIFICATIONS,
     };
 }
