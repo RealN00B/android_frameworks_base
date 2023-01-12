@@ -6454,6 +6454,12 @@ public final class Settings {
         public static final String QS_DUAL_TONE = "qs_dual_tone";
         
         /**
+          * Frame rate recorder
+          * @hide
+          */
+        public static final String FRAME_RATE_RECORDER = "frame_rate_recorder";
+        
+        /**
          * Haptic feedback on brightness slider
          * @hide
          */
@@ -6607,6 +6613,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(AMBIENT_TEXT_COLOR);
             PRIVATE_SETTINGS.add(AMBIENT_TEXT_TYPE_COLOR);
             PRIVATE_SETTINGS.add(OMNIJAWS_WEATHER_ICON_PACK);
+            PRIVATE_SETTINGS.add(FRAME_RATE_RECORDER);
         }
 
         /**
