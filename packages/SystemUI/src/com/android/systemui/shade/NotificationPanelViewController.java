@@ -65,6 +65,7 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.hardware.biometrics.SensorLocationInternal;
 import android.hardware.fingerprint.FingerprintSensorPropertiesInternal;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
@@ -4786,6 +4787,11 @@ public final class NotificationPanelViewController implements Dumpable {
                 /* notifyForDescendants */ false,
                 mSettingsChangeObserver
         );
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.KEYGUARD_QUICK_TOGGLES),
+                /* notifyForDescendants */ false,
+                mSettingsChangeObserver
+        );
     }
 
     public void setBlockedGesturalNavigation(boolean blocked) {
@@ -5634,8 +5640,13 @@ public final class NotificationPanelViewController implements Dumpable {
         }
 
         @Override
-        public void onChange(boolean selfChange) {
-            debugLog("onSettingsChanged");
+        public void onChange(boolean selfChange, Uri uri) {
+            if (DEBUG_LOGCAT) Log.d(TAG, "onSettingsChanged");
+
+            if (uri.getLastPathSegment().equals(
+                    Settings.System.KEYGUARD_QUICK_TOGGLES)) {
+                mKeyguardBottomAreaViewModel.updateSettings();
+            }
 
             // Can affect multi-user switcher visibility
             reInflateViews();
