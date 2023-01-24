@@ -6024,6 +6024,12 @@ public final class Settings {
          * @hide
          */
         public static final String QS_PANEL_STYLE = "qs_panel_style";
+        
+        /**
+         * Whether to display 5G icon instead LTE
+         * @hide
+         */
+        public static final String SHOW_FIVEG_ICON = "show_fiveg_icon";
 
         /**
          * Keys we no longer back up under the current schema, but want to continue to
