@@ -81,6 +81,7 @@ import com.android.systemui.statusbar.policy.DeviceProvisionedController;
 import com.android.systemui.statusbar.policy.DeviceProvisionedController.DeviceProvisionedListener;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.util.settings.SecureSettings;
+import com.android.systemui.util.settings.SystemSettings;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -130,6 +131,7 @@ public class ThemeOverlayController implements CoreStartable, Dumpable, TunerSer
     private final BroadcastDispatcher mBroadcastDispatcher;
     private final Executor mBgExecutor;
     private final SecureSettings mSecureSettings;
+    private final SystemSettings mSystemSettings;
     private final Executor mMainExecutor;
     private final Handler mBgHandler;
     private final boolean mIsMonochromaticEnabled;
@@ -404,7 +406,8 @@ public class ThemeOverlayController implements CoreStartable, Dumpable, TunerSer
             @Main Resources resources,
             WakefulnessLifecycle wakefulnessLifecycle,
             ConfigurationController configurationController,
-            TunerService tunerService) {
+            TunerService tunerService,
+            SystemSettings systemSettings) {
         mContext = context;
         mIsMonochromaticEnabled = featureFlags.isEnabled(Flags.MONOCHROMATIC_THEME);
         mIsMonetEnabled = featureFlags.isEnabled(Flags.MONET);
@@ -416,6 +419,7 @@ public class ThemeOverlayController implements CoreStartable, Dumpable, TunerSer
         mBgHandler = bgHandler;
         mThemeManager = themeOverlayApplier;
         mSecureSettings = secureSettings;
+        mSystemSettings = systemSettings;
         mWallpaperManager = wallpaperManager;
         mUserTracker = userTracker;
         mResources = resources;
@@ -522,6 +526,18 @@ public class ThemeOverlayController implements CoreStartable, Dumpable, TunerSer
         if (!mIsMonetEnabled) {
             return;
         }
+
+        mSystemSettings.registerContentObserverForUser(
+                Settings.System.getUriFor(Settings.System.CLOCK_USE_CUSTOM_FORMAT),
+                false,
+                new ContentObserver(mBgHandler) {
+                    @Override
+                    public void onChange(boolean selfChange, Collection<Uri> collection, int flags,
+                            int userId) {
+                        reevaluateSystemTheme(true /* forceReload */);
+                    }
+                },
+                UserHandle.USER_ALL);
 
         mUserTracker.addCallback(mUserTrackerCallback, mMainExecutor);
 
