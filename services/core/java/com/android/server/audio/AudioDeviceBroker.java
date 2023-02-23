@@ -366,7 +366,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
                         + pid + " and device: " + device);
             }
         } else {
-            client = removeCommunicationRouteClient(cb, true);
+            client = removeCommunicationRouteClient(pid);
         }
         if (client == null) {
             return;
@@ -381,7 +381,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
                 if (prevClientDevice != null) {
                     addCommunicationRouteClient(cb, pid, prevClientDevice);
                 } else {
-                    removeCommunicationRouteClient(cb, true);
+                    removeCommunicationRouteClient(pid);
                 }
                 postBroadcastScoConnectionState(AudioManager.SCO_AUDIO_STATE_DISCONNECTED);
             }
@@ -1942,13 +1942,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
         dispatchCommunicationDevice();
     }
 
-    private CommunicationRouteClient removeCommunicationRouteClient(
-                    IBinder cb, boolean unregister) {
+    private CommunicationRouteClient removeCommunicationRouteClient(int pid) {
         for (CommunicationRouteClient cl : mCommunicationRouteClients) {
-            if (cl.getBinder() == cb) {
-                if (unregister) {
-                    cl.unregisterDeathRecipient();
-                }
+            if (cl.getPid() == pid) {
+                cl.unregisterDeathRecipient();
                 mCommunicationRouteClients.remove(cl);
                 return cl;
             }
@@ -1960,7 +1957,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
     private CommunicationRouteClient addCommunicationRouteClient(
                     IBinder cb, int pid, AudioDeviceAttributes device) {
         // always insert new request at first position
-        removeCommunicationRouteClient(cb, true);
+        removeCommunicationRouteClient(pid);
         CommunicationRouteClient client = new CommunicationRouteClient(cb, pid, device);
         if (client.registerDeathRecipient()) {
             mCommunicationRouteClients.add(0, client);
