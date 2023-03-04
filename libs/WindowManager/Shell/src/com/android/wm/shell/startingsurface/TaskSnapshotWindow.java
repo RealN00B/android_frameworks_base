@@ -36,6 +36,7 @@ import static android.view.WindowManager.LayoutParams.FLAG_SPLIT_TOUCH;
 import static android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION;
 import static android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
 import static android.view.WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+import static android.view.WindowManager.LayoutParams.INPUT_FEATURE_NO_INPUT_CHANNEL;
 import static android.view.WindowManager.LayoutParams.PRIVATE_FLAG_FORCE_DRAW_BAR_BACKGROUNDS;
 import static android.view.WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY;
 import static android.view.WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST;
@@ -196,6 +197,7 @@ public class TaskSnapshotWindow {
         layoutParams.setFitInsetsTypes(attrs.getFitInsetsTypes());
         layoutParams.setFitInsetsSides(attrs.getFitInsetsSides());
         layoutParams.setFitInsetsIgnoringVisibility(attrs.isFitInsetsIgnoringVisibility());
+        layoutParams.inputFeatures |= INPUT_FEATURE_NO_INPUT_CHANNEL;
 
         layoutParams.setTitle(String.format(TITLE_FORMAT, taskId));
 
