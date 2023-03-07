@@ -99,4 +99,8 @@
     <dimen name="side_img">0dp</dimen>
     <dimen name="ancient_header_small">80dp</dimen>
     <dimen name="ancient_header_big">200dp</dimen>
+    
+    <!-- battery Styles -->
+    <dimen name="status_bar_battery_icon_height_landscape_a_o">22.0dip</dimen>
+    <dimen name="status_bar_battery_icon_width_landscape_a_o">25.0dip</dimen>
 </resources>
