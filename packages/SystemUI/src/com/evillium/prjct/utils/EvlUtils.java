@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.IBinder;
 import android.os.UserHandle;
 import android.provider.Settings;
@@ -33,52 +32,6 @@ public class EvlUtils {
 
     public static final int transColor = 0x00FFFFFF;
     public static final int transValue = 24;
-
-    public static Bitmap resizeMaxDeviceSize(Context context, Drawable image) {
-        Bitmap i2b = ((BitmapDrawable) image).getBitmap();
-        return resizeMaxDeviceSize(context, i2b);
-    }
-
-    public static Bitmap resizeMaxDeviceSize(Context context, Bitmap image) {
-        Bitmap imageToBitmap;
-        DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager wm = context.getSystemService(WindowManager.class);
-        wm.getDefaultDisplay().getRealMetrics(metrics);
-        int maxHeight = metrics.heightPixels;
-        int maxWidth = metrics.widthPixels;
-        try {
-            imageToBitmap = RGB565toARGB888(image);
-            if (maxHeight > 0 && maxWidth > 0) {
-                int width = imageToBitmap.getWidth();
-                int height = imageToBitmap.getHeight();
-                float ratioBitmap = (float) width / (float) height;
-                float ratioMax = (float) maxWidth / (float) maxHeight;
-
-                int finalWidth = maxWidth;
-                int finalHeight = maxHeight;
-                if (ratioMax > ratioBitmap) {
-                    finalWidth = (int) ((float)maxHeight * ratioBitmap);
-                } else {
-                    finalHeight = (int) ((float)maxWidth / ratioBitmap);
-                }
-                imageToBitmap = Bitmap.createScaledBitmap(imageToBitmap, finalWidth, finalHeight, true);
-                return imageToBitmap;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return image;
-    }
-
-    private static Bitmap RGB565toARGB888(Bitmap img) throws Exception {
-        int numPixels = img.getWidth() * img.getHeight();
-        int[] pixels = new int[numPixels];
-        //Get JPEG pixels.  Each int is the color values for one pixel.
-        img.getPixels(pixels, 0, img.getWidth(), 0, 0, img.getWidth(), img.getHeight());
-        Bitmap result = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.ARGB_8888);
-        result.setPixels(pixels, 0, result.getWidth(), 0, 0, result.getWidth(), result.getHeight());
-        return result;
-    }
 
     public static int getValueInDp(int value) {
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
