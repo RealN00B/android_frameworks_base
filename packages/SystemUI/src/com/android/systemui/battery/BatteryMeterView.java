@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.UserHandle;
@@ -43,11 +44,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import com.android.systemui.tuner.TunerService;
+
+import com.evillium.prjct.utils.EvlUtils;
 
 import androidx.annotation.StyleRes;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.settingslib.graph.CircleBatteryDrawable;
+import com.android.settingslib.graph.ThemedBatteryDrawable;
 import com.android.settingslib.graph.LandscapeBatteryA;
 import com.android.settingslib.graph.LandscapeBatteryB;
 import com.android.settingslib.graph.LandscapeBatteryC;
@@ -63,6 +68,7 @@ import com.android.settingslib.graph.LandscapeBatteryL;
 import com.android.settingslib.graph.LandscapeBatteryM;
 import com.android.settingslib.graph.LandscapeBatteryN;
 import com.android.settingslib.graph.LandscapeBatteryO;
+import com.android.systemui.Dependency;
 import com.android.systemui.DualToneHandler;
 import com.android.systemui.R;
 import com.android.systemui.animation.Interpolators;
@@ -75,7 +81,7 @@ import java.lang.annotation.Retention;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
-public class BatteryMeterView extends LinearLayout implements DarkReceiver {
+public class BatteryMeterView extends LinearLayout implements DarkReceiver ,TunerService.Tunable {
 
     private static final int BATTERY_STYLE_PORTRAIT = 0;
     private static final int BATTERY_STYLE_CIRCLE = 1;
@@ -103,8 +109,68 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     public static final int MODE_DEFAULT = 0;
     public static final int MODE_ON = 1;
     public static final int MODE_OFF = 2;
-    public static final int MODE_ESTIMATE = 3;
+    public static final int MODE_ESTIMATE = 3; // Not to be used
+    private static final String EVL_BATTERY_IMAGE_ROTATION = "system:evl_battery_image_rotation";
+    private static final String EVL_BATTERY_CUSTOM_DIMENSION = "system:evl_battery_custom_dimension";
+    private static final String EVL_BATTERY_CUSTOM_MARGIN_LEFT = "system:evl_battery_custom_margin_left";
+    private static final String EVL_BATTERY_CUSTOM_MARGIN_TOP = "system:evl_battery_custom_margin_top";
+    private static final String EVL_BATTERY_CUSTOM_MARGIN_RIGHT = "system:evl_battery_custom_margin_right";
+    private static final String EVL_BATTERY_CUSTOM_MARGIN_BOTTOM = "system:evl_battery_custom_margin_bottom";
+    private static final String EVL_BATTERY_CUSTOM_SCALE_HEIGHT = "system:evl_battery_custom_scale_height";
+    private static final String EVL_BATTERY_CUSTOM_SCALE_WIDTH = "system:evl_battery_custom_scale_width";
+    
+    private static final String EVL_BATTERY_SCALED_PERIMETER_ALPHA = "system:evl_battery_scaled_perimeter_alpha";
+    private static final String EVL_BATTERY_SCALED_FILL_ALPHA = "system:evl_battery_scaled_fill_alpha";
+    private static final String EVL_BATTERY_RAINBOW_FILL_COLOR = "system:evl_battery_rainbow_fill_color";
+    private static final String EVL_BATTERY_CUSTOM_COLOR = "system:evl_battery_custom_color";
+    private static final String EVL_BATTERY_CHARGING_COLOR = "system:evl_battery_charging_color";
+    private static final String EVL_BATTERY_FILL_COLOR = "system:evl_battery_fill_color";
+    private static final String EVL_BATTERY_FILL_GRADIENT_COLOR = "system:evl_battery_fill_gradient_color";
+    private static final String EVL_BATTERY_POWERSAVE_COLOR = "system:evl_battery_powersave_color";
+    private static final String EVL_BATTERY_POWERSAVEFILL_COLOR = "system:evl_battery_powersavefill_color"; 
+    
+    private static final String FLIPLAYOUTBATRE =
+            "system:" + "FLIPLAYOUTBATRE";
+    private static final String CUSTOM_CHARGE_SWITCH =
+            "system:" + "CUSTOM_CHARGE_SWITCH";
+    private static final String CUSTOM_CHARGE_SYMBOL =
+            "system:" + "CUSTOM_CHARGE_SYMBOL";
+            
+    private static final String CUSTOM_CHARGING_ICON_SWITCH = "system:custom_charging_icon_switch";
+    private static final String CUSTOM_CHARGING_ICON_STYLE = "system:custom_charging_icon_style";
+    private static final String CUSTOM_CHARGING_ICON_ML = "system:custom_charging_icon_ml";
+    private static final String CUSTOM_CHARGING_ICON_MR = "system:custom_charging_icon_mr";
+    private static final String CUSTOM_CHARGING_ICON_WH = "system:custom_charging_icon_wh";
 
+    private int ChargeSymbol;
+    private boolean idcSwitch; 
+    
+    private boolean mChargingIconSwitch;
+    private int mChargingIconStyle;
+    private int mChargingIconML;
+    private int mChargingIconMR;
+    private int mChargingIconWH;
+    
+    private boolean mBatteryLayoutReverse;
+    private boolean mBatteryCustomDimension;
+    private int mBatteryMarginLeft;
+    private int mBatteryMarginTop;
+    private int mBatteryMarginRight;
+    private int mBatteryMarginBottom;
+    private int mBatteryScaleWidth;
+    private int mBatteryScaleHeight;
+
+    private boolean mScaledPerimeterAlpha;
+    private boolean mScaledFillAlpha;
+    private boolean mRainbowFillColor;
+    private boolean mCustomBlendColor;
+    private int mCustomChargingColor;
+    private int mCustomFillColor;
+    private int mCustomFillGradColor;
+    private int mCustomPowerSaveColor;
+    private int mCustomPowerSaveFillColor;
+
+    private final ThemedBatteryDrawable mThemedDrawable;
     private final AccessorizedBatteryDrawable mAccessorizedDrawable;
     private final CircleBatteryDrawable mCircleDrawable;
     private final LandscapeBatteryA mLandscapeBatteryA;
@@ -123,6 +189,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     private final LandscapeBatteryN mLandscapeBatteryN;
     private final LandscapeBatteryO mLandscapeBatteryO;
     private final ImageView mBatteryIconView;
+    private final ImageView mChargingIconView;
     private TextView mBatteryPercentView;
 
     private final @StyleRes int mPercentageStyleId;
@@ -133,6 +200,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     private boolean mCharging;
     private boolean mIsOverheated;
     private boolean mDisplayShieldEnabled;
+    private boolean mPCharging;
     // Error state where we know nothing about the current battery state
     private boolean mBatteryStateUnknown;
     // Lazily-loaded since this is expected to be a rare-if-ever state
@@ -146,6 +214,8 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     private int mNonAdaptedSingleToneColor;
     private int mNonAdaptedForegroundColor;
     private int mNonAdaptedBackgroundColor;
+    
+    private boolean plip;
 
     private BatteryEstimateFetcher mBatteryEstimateFetcher;
 
@@ -166,6 +236,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         mPercentageStyleId = atts.getResourceId(R.styleable.BatteryMeterView_textAppearance, 0);
         mAccessorizedDrawable = new AccessorizedBatteryDrawable(context, frameColor);
         mCircleDrawable = new CircleBatteryDrawable(context, frameColor);
+        mThemedDrawable = new ThemedBatteryDrawable(context, frameColor);
         mLandscapeBatteryA = new LandscapeBatteryA(context, frameColor);
         mLandscapeBatteryB = new LandscapeBatteryB(context, frameColor);
         mLandscapeBatteryC = new LandscapeBatteryC(context, frameColor);
@@ -195,6 +266,11 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         mlp.setMargins(0, 0, 0,
                 getResources().getDimensionPixelOffset(R.dimen.battery_margin_bottom));
         addView(mBatteryIconView, mlp);
+        
+        // Charging icon
+        mChargingIconView = new ImageView(context);
+        addView(mChargingIconView, mlp);
+        updateChargingIconView();
 
         updateShowPercent();
         mDualToneHandler = new DualToneHandler(context);
@@ -205,6 +281,16 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
 
         setClipChildren(false);
         setClipToPadding(false);
+    }
+    
+    private void updateFlipper() {
+        setOrientation(LinearLayout.HORIZONTAL);
+        setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        if (plip) {
+            setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        } else {
+            setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        }
     }
 
     private boolean isNightMode() {
@@ -278,6 +364,416 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     public boolean hasOverlappingRendering() {
         return false;
     }
+    
+    @Override
+    public void onTuningChanged(String key, String newValue) {
+        if (EVL_BATTERY_IMAGE_ROTATION.equals(key)) {
+            mBatteryLayoutReverse = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (EVL_BATTERY_CUSTOM_DIMENSION.equals(key)) {
+            mBatteryCustomDimension = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (EVL_BATTERY_CUSTOM_MARGIN_LEFT.equals(key)) {
+            mBatteryMarginLeft = TunerService.parseInteger(newValue, 0);
+        } else if (EVL_BATTERY_CUSTOM_MARGIN_TOP.equals(key)) {
+            mBatteryMarginTop = TunerService.parseInteger(newValue, 0);
+        } else if (EVL_BATTERY_CUSTOM_MARGIN_RIGHT.equals(key)) {
+            mBatteryMarginRight = TunerService.parseInteger(newValue, 0);
+        } else if (EVL_BATTERY_CUSTOM_MARGIN_BOTTOM.equals(key)) {
+            mBatteryMarginBottom = TunerService.parseInteger(newValue, 0);
+        } else if (EVL_BATTERY_CUSTOM_SCALE_HEIGHT.equals(key)) {
+            mBatteryScaleHeight = TunerService.parseInteger(newValue, 20);
+        } else if (EVL_BATTERY_CUSTOM_SCALE_WIDTH.equals(key)) {
+            mBatteryScaleWidth = TunerService.parseInteger(newValue, 28);
+        } else if (EVL_BATTERY_SCALED_PERIMETER_ALPHA.equals(key)) {
+            mScaledPerimeterAlpha = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (EVL_BATTERY_SCALED_FILL_ALPHA.equals(key)) {
+            mScaledFillAlpha = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (EVL_BATTERY_RAINBOW_FILL_COLOR.equals(key)) {
+            mRainbowFillColor = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (EVL_BATTERY_CUSTOM_COLOR.equals(key)) {
+            mCustomBlendColor = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (EVL_BATTERY_CHARGING_COLOR.equals(key)) {
+            mCustomChargingColor = TunerService.parseInteger(newValue, Color.BLACK);
+        } else if (EVL_BATTERY_FILL_COLOR.equals(key)) {
+            mCustomFillColor = TunerService.parseInteger(newValue, Color.BLACK);
+        } else if (EVL_BATTERY_FILL_GRADIENT_COLOR.equals(key)) {
+            mCustomFillGradColor = TunerService.parseInteger(newValue, Color.BLACK);
+        } else if (EVL_BATTERY_POWERSAVE_COLOR.equals(key)) {
+            mCustomPowerSaveColor = TunerService.parseInteger(newValue, Color.BLACK);
+        } else if (EVL_BATTERY_POWERSAVEFILL_COLOR.equals(key)) {
+            mCustomPowerSaveFillColor = TunerService.parseInteger(newValue, Color.BLACK);
+        } else if (FLIPLAYOUTBATRE.equals(key)) {
+            plip = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (CUSTOM_CHARGE_SYMBOL.equals(key)) {
+            ChargeSymbol = TunerService.parseInteger(newValue, 0);
+            setPercentTextAtCurrentLevel();
+        } else if (CUSTOM_CHARGE_SWITCH.equals(key)) {
+            idcSwitch = TunerService.parseIntegerSwitch(newValue, false);
+            setPercentTextAtCurrentLevel();
+        } else if (CUSTOM_CHARGING_ICON_SWITCH.equals(key)) {
+            mChargingIconSwitch = TunerService.parseIntegerSwitch(newValue, false);
+        } else if (CUSTOM_CHARGING_ICON_STYLE.equals(key)) {
+            mChargingIconStyle = TunerService.parseInteger(newValue, 0);
+        } else if (CUSTOM_CHARGING_ICON_ML.equals(key)) {
+            mChargingIconML = TunerService.parseInteger(newValue, 1);
+        } else if (CUSTOM_CHARGING_ICON_MR.equals(key)) {
+            mChargingIconMR = TunerService.parseInteger(newValue, 0);
+        } else if (CUSTOM_CHARGING_ICON_WH.equals(key)) {
+            mChargingIconWH = TunerService.parseInteger(newValue, 14);
+        }
+        updateSettings();
+    }
+    
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Dependency.get(TunerService.class)
+            .addTunable(this, new String[] {
+                            EVL_BATTERY_IMAGE_ROTATION,
+                            EVL_BATTERY_CUSTOM_DIMENSION,
+                            EVL_BATTERY_CUSTOM_MARGIN_LEFT,
+                            EVL_BATTERY_CUSTOM_MARGIN_TOP,
+                            EVL_BATTERY_CUSTOM_MARGIN_RIGHT,
+                            EVL_BATTERY_CUSTOM_MARGIN_BOTTOM,
+                            EVL_BATTERY_CUSTOM_SCALE_HEIGHT,
+                            EVL_BATTERY_CUSTOM_SCALE_WIDTH,
+                            EVL_BATTERY_SCALED_PERIMETER_ALPHA,
+                            EVL_BATTERY_SCALED_FILL_ALPHA,
+                            EVL_BATTERY_RAINBOW_FILL_COLOR,
+                            EVL_BATTERY_CUSTOM_COLOR,
+                            EVL_BATTERY_CHARGING_COLOR,
+                            EVL_BATTERY_FILL_COLOR,
+                            EVL_BATTERY_FILL_GRADIENT_COLOR,
+                            EVL_BATTERY_POWERSAVE_COLOR,
+                            EVL_BATTERY_POWERSAVEFILL_COLOR,
+                            CUSTOM_CHARGE_SWITCH, 
+                            CUSTOM_CHARGE_SYMBOL,
+                            CUSTOM_CHARGING_ICON_SWITCH,
+                            CUSTOM_CHARGING_ICON_STYLE,
+                            CUSTOM_CHARGING_ICON_ML,
+                            CUSTOM_CHARGING_ICON_MR,
+                            CUSTOM_CHARGING_ICON_WH,
+                            FLIPLAYOUTBATRE
+                        });
+    }
+    
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        Dependency.get(TunerService.class).removeTunable(this);
+    }
+
+    private void updateRotationLandscape() {
+        if (mBatteryLayoutReverse) {
+            if (getBatteryStyle() == BATTERY_STYLE_LANDSCAPEA
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEB
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEC
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEF
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEG
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEH
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEI
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEJ
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEK
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEL
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEM
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEN
+                || getBatteryStyle() == BATTERY_STYLE_LANDSCAPEO) {
+                mBatteryIconView.setRotation(180f);
+            } else {
+                mBatteryIconView.setRotation(0f);
+            }
+        } else {
+            mBatteryIconView.setRotation(0f);
+        }
+    }
+    
+    public void setIsQsPercent(boolean isQs) {
+        mLandscapeBatteryL.setQsPercent(isQs);
+    }
+
+    private void updateChargingIconView() {
+        final Context c = mContext;
+
+        mLandscapeBatteryA.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryB.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryC.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryD.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryE.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryF.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryG.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryH.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryJ.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryK.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryL.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryM.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryN.setCustomChargingIcon(mChargingIconSwitch);
+        mLandscapeBatteryO.setCustomChargingIcon(mChargingIconSwitch);
+
+        Drawable d = null;
+        switch (mChargingIconStyle) {
+            case 0:
+                d = c.getDrawable(R.drawable.ic_charging_bold);
+                break;
+            case 1:
+                d = c.getDrawable(R.drawable.ic_charging_asus);
+                break;
+            case 2:
+                d = c.getDrawable(R.drawable.ic_charging_buddy);
+                break;
+            case 3:
+                d = c.getDrawable(R.drawable.ic_charging_evplug);
+                break;
+            case 4:
+                d = c.getDrawable(R.drawable.ic_charging_idc);
+                break;
+            case 5:
+                d = c.getDrawable(R.drawable.ic_charging_ios);
+                break;
+            case 6:
+                d = c.getDrawable(R.drawable.ic_charging_koplak);
+                break;
+            case 7:
+                d = c.getDrawable(R.drawable.ic_charging_miui);
+                break;
+            case 8:
+                d = c.getDrawable(R.drawable.ic_charging_mmk);
+                break;
+            case 9:
+                d = c.getDrawable(R.drawable.ic_charging_moto);
+                break;
+            case 10:
+                d = c.getDrawable(R.drawable.ic_charging_nokia);
+                break;
+            case 11:
+                d = c.getDrawable(R.drawable.ic_charging_plug);
+                break;
+            case 12:
+                d = c.getDrawable(R.drawable.ic_charging_powercable);
+                break;
+            case 13:
+                d = c.getDrawable(R.drawable.ic_charging_powercord);
+                break;
+            case 14:
+                d = c.getDrawable(R.drawable.ic_charging_powerstation);
+                break;
+            case 15:
+                d = c.getDrawable(R.drawable.ic_charging_realme);
+                break;
+            case 16:
+                d = c.getDrawable(R.drawable.ic_charging_soak);
+                break;
+            case 17:
+                d = c.getDrawable(R.drawable.ic_charging_stres);
+                break;
+            case 18:
+                d = c.getDrawable(R.drawable.ic_charging_strip);
+                break;
+            case 19:
+                d = c.getDrawable(R.drawable.ic_charging_usbcable);
+                break;
+            case 20:
+                d = c.getDrawable(R.drawable.ic_charging_xiaomi);
+                break;
+            default:
+                d = null;
+        }
+
+        if (d != null)
+            mChargingIconView.setImageDrawable(d);
+
+        int l = EvlUtils.dpToPx(mChargingIconML);
+        int r = EvlUtils.dpToPx(mChargingIconMR);
+        int wh = EvlUtils.dpToPx(mChargingIconWH);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(wh, wh);
+        lp.setMargins(l, 0, r, getResources().getDimensionPixelSize(R.dimen.battery_margin_bottom));
+        mChargingIconView.setLayoutParams(lp);
+
+        mChargingIconView.setVisibility(
+            mCharging && mChargingIconSwitch ? View.VISIBLE : View.GONE
+        );
+    }
+    
+    private void updateCustomizeBatteryDrawable() {
+        
+        mThemedDrawable.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+        
+        mLandscapeBatteryA.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryB.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryC.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryD.customizeBatteryDrawable(
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryE.customizeBatteryDrawable(
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryF.customizeBatteryDrawable(
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryG.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryH.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryI.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mRainbowFillColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryJ.customizeBatteryDrawable(
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mRainbowFillColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryK.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryL.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryM.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryN.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+
+        mLandscapeBatteryO.customizeBatteryDrawable(
+            mBatteryLayoutReverse,
+            mScaledPerimeterAlpha,
+            mScaledFillAlpha,
+            mCustomBlendColor,
+            mCustomFillColor,
+            mCustomFillGradColor,
+            mCustomChargingColor,
+            mCustomPowerSaveColor,
+            mCustomPowerSaveFillColor);
+    }
+    
+    private void updateSettings() {
+        updateCustomizeBatteryDrawable();
+        updateChargingIconView();
+        updateRotationLandscape();
+        updateShowPercent();
+        scaleBatteryMeterViews();
+        updateFlipper();
+    }
 
     /**
      * Update battery level
@@ -289,6 +785,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         if (mLevel != level) {
             mLevel = level;
             mCircleDrawable.setBatteryLevel(level);
+            mThemedDrawable.setBatteryLevel(mLevel);
             mLandscapeBatteryA.setBatteryLevel(level);
             mLandscapeBatteryB.setBatteryLevel(level);
             mLandscapeBatteryC.setBatteryLevel(level);
@@ -309,6 +806,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         if (mCharging != pluggedIn) {
             mCharging = pluggedIn;
             mCircleDrawable.setCharging(pluggedIn);
+            mThemedDrawable.setCharging(mCharging);
             mLandscapeBatteryA.setCharging(pluggedIn);
             mLandscapeBatteryB.setCharging(pluggedIn);
             mLandscapeBatteryC.setCharging(pluggedIn);
@@ -326,12 +824,14 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
             mLandscapeBatteryO.setCharging(pluggedIn);
             updateShowPercent();
             updatePercentText();
+            updateChargingIconView();
         }
     }
 
     void onPowerSaveChanged(boolean isPowerSave) {
         mAccessorizedDrawable.setPowerSaveEnabled(isPowerSave);
         mCircleDrawable.setPowerSaveEnabled(isPowerSave);
+        mThemedDrawable.setPowerSaveEnabled(isPowerSave);
         mLandscapeBatteryA.setPowerSaveEnabled(isPowerSave);
         mLandscapeBatteryB.setPowerSaveEnabled(isPowerSave);
         mLandscapeBatteryC.setPowerSaveEnabled(isPowerSave);
@@ -397,7 +897,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
             setPercentTextAtCurrentLevel();
             return;
         }
-
+        
         if (mBatteryPercentView != null) {
             if (mShowPercentMode == MODE_ESTIMATE && !mCharging) {
                 mBatteryEstimateFetcher.fetchBatteryTimeRemainingEstimate(
@@ -422,22 +922,64 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     }
 
     private void setPercentTextAtCurrentLevel() {
-        if (mBatteryPercentView != null) {
-            mEstimateText = null;
+        if (mBatteryPercentView == null) return;
+
+        String PercentText = NumberFormat.getPercentInstance().format(mLevel / 100f);
+        // Setting text actually triggers a layout pass (because the text view is set to
+        // wrap_content width and TextView always relayouts for this). Avoid needless
+        // relayout if the text didn't actually change.
+        if (!TextUtils.equals(mBatteryPercentView.getText(), PercentText) || mPCharging != mCharging) {
+            mPCharging = mCharging;
             // Use the high voltage symbol ⚡ (u26A1 unicode) but prevent the system
             // to load its emoji colored variant with the uFE0E flag
-            String bolt = "\u26A1\uFE0E";
-            CharSequence mChargeIndicator = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT) ? (bolt + " ") : "";
-            String percentText = mChargeIndicator + NumberFormat.getPercentInstance().format(mLevel / 100f);
-            // Setting text actually triggers a layout pass (because the text view is set to
-            // wrap_content width and TextView always relayouts for this). Avoid needless
-            // relayout if the text didn't actually change.
-            if (!TextUtils.equals(mBatteryPercentView.getText(), percentText)) {
-                mBatteryPercentView.setText(percentText);
-            }
-        }
-
-        updateContentDescription();
+            // only use it when there is no batt icon showing
+            String indication = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u26A1\uFE0E " : "";
+            String indication0 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "" : "";
+            String indication1 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u2623\uFE0E " : "";
+            String indication2 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u2605\uFE0E " : "";
+            String indication3 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u263a\uFE0E " : "";
+            String indication4 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u267d\uFE0E " : "";
+            String indication5 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u199f\uFE0E " : "";
+            String indication6 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u2741\uFE0E " : "";
+            String indication7 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u274a\uFE0E " : "";
+            String indication8 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u2746\uFE0E " : "";
+            String indication9 = mCharging && (getBatteryStyle() == BATTERY_STYLE_TEXT)
+                    ? "\u224b\uFE0E " : "";
+            if (ChargeSymbol == 1) {
+                     mBatteryPercentView.setText(indication1 + PercentText);
+                  } else if (ChargeSymbol == 2) {
+                     mBatteryPercentView.setText(indication2 + PercentText);
+                  } else if (ChargeSymbol == 3) {
+                     mBatteryPercentView.setText(indication3 + PercentText);
+                  } else if (ChargeSymbol == 4) {
+                     mBatteryPercentView.setText(indication4 + PercentText);
+                  } else if (ChargeSymbol == 5) {
+                     mBatteryPercentView.setText(indication5 + PercentText);
+                  } else if (ChargeSymbol == 6) {
+                     mBatteryPercentView.setText(indication6 + PercentText);
+                  } else if (ChargeSymbol == 7) {
+                     mBatteryPercentView.setText(indication7 + PercentText);
+                  } else if (ChargeSymbol == 8) {
+                     mBatteryPercentView.setText(indication8 + PercentText);
+                  } else if (ChargeSymbol == 9) {
+                     mBatteryPercentView.setText(indication9 + PercentText);
+                  } else {
+                    mBatteryPercentView.setText(indication + PercentText);       
+             }
+       	}
+        setContentDescription(
+                getContext().getString(mCharging ? R.string.accessibility_battery_level_charging
+                        : R.string.accessibility_battery_level, mLevel));
     }
 
     private void updateContentDescription() {
@@ -465,7 +1007,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
 
         setContentDescription(contentDescription);
     }
-
+    
     void updateShowPercent() {
         final boolean showing = mBatteryPercentView != null;
         // TODO(b/140051051)
@@ -475,13 +1017,14 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         final boolean drawPercentInside = mShowPercentMode == MODE_DEFAULT &&
                 showBatteryPercent == 1;
         final boolean drawPercentOnly = mShowPercentMode == MODE_ESTIMATE ||
-                showBatteryPercent == 2 || mCharging;
+                showBatteryPercent == 2;
         boolean shouldShow =
                 (drawPercentOnly && (!drawPercentInside || mCharging) ||
                 getBatteryStyle() == BATTERY_STYLE_TEXT);
         shouldShow = shouldShow && !mBatteryStateUnknown;
         
         mCircleDrawable.setShowPercent(drawPercentInside);
+        mThemedDrawable.setShowPercent(drawPercentInside);
         mLandscapeBatteryA.setShowPercent(drawPercentInside);
         mLandscapeBatteryB.setShowPercent(drawPercentInside);
         mLandscapeBatteryC.setShowPercent(drawPercentInside);
@@ -558,52 +1101,176 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
      * Looks up the scale factor for status bar icons and scales the battery view by that amount.
      */
     void scaleBatteryMeterViews() {
+        if (mBatteryIconView == null) {
+            return;
+        }
         Resources res = getContext().getResources();
         TypedValue typedValue = new TypedValue();
 
         res.getValue(R.dimen.status_bar_icon_scale_factor, typedValue, true);
         float iconScaleFactor = typedValue.getFloat();
-
-        int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
-        int batteryWidth = (getBatteryStyle() == BATTERY_STYLE_CIRCLE || getBatteryStyle() == BATTERY_STYLE_DOTTED_CIRCLE) ?
-                res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_circle_width) :
-                res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);
-        float mainBatteryHeight = batteryHeight * iconScaleFactor;
-        float mainBatteryWidth = batteryWidth * iconScaleFactor;
         
-        batteryHeight = mBatteryStyle == BATTERY_STYLE_LANDSCAPEA ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEB ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEC ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPED ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEE ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEF ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEG ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEH ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEI ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEJ ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEK ||
-               		mBatteryStyle == BATTERY_STYLE_LANDSCAPEL ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEM ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEN ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEO ?
-        res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_a_o) : batteryHeight;        	
-                
-         batteryWidth = mBatteryStyle == BATTERY_STYLE_LANDSCAPEA ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEB ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEC ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPED ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEE ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEF ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEG ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEH ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEI ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEJ ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEK ||
-               		mBatteryStyle == BATTERY_STYLE_LANDSCAPEL ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEM ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEN ||
-                	mBatteryStyle == BATTERY_STYLE_LANDSCAPEO ?
-        res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_a_o) : batteryWidth;
+        int defaultHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
+        int defaultWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);
+        int defaultMarginBottom = res.getDimensionPixelSize(R.dimen.battery_margin_bottom);
+        int marginLeft = EvlUtils.dpToPx(mBatteryMarginLeft);
+        int marginTop = EvlUtils.dpToPx(mBatteryMarginTop);
+        int marginRight = EvlUtils.dpToPx(mBatteryMarginRight);
+        int marginBottom = EvlUtils.dpToPx(mBatteryMarginBottom);
+        int scaleHeight = EvlUtils.dpToPx(mBatteryScaleHeight);
+        int scaleWidth = EvlUtils.dpToPx(mBatteryScaleWidth);
+        float mainBatteryHeight = defaultHeight * iconScaleFactor;
+        float mainBatteryWidth = defaultWidth * iconScaleFactor;
+
+        int mBatteryStyle = getBatteryStyle();
+        
+        if (mBatteryCustomDimension) {
+            if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEA ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEB ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEC ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPED ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEE ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEF ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEG ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEH ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEI ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEJ ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEK ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEL ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEM ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEN ||
+                mBatteryStyle == BATTERY_STYLE_LANDSCAPEO ||
+                mBatteryStyle == BATTERY_STYLE_PORTRAIT   ||
+                mBatteryStyle == BATTERY_STYLE_CIRCLE     ||
+                mBatteryStyle == BATTERY_STYLE_DOTTED_CIRCLE) {
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (scaleWidth), (scaleHeight));
+                scaledLayoutParams.setMargins(marginLeft,
+                                              marginTop,
+                                              marginRight,
+                                              marginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else {
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (defaultWidth), (defaultHeight));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            }
+        } else {
+            if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEA) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_a);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_a);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEB) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_b);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_b);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEC) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_c);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_c);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPED) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_d);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_d);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEE) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_e);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_e);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEF) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_f);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_f);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEG) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_g);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_g);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEH) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_h);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_h);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEI) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_i);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_i);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEJ) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_j);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_j);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEK) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_k);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_k);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEL) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_l);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_l);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEM) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_m);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_m);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEN) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_n);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_n);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_LANDSCAPEO) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width_landscape_o);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height_landscape_o);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            } else if (mBatteryStyle == BATTERY_STYLE_CIRCLE || mBatteryStyle == BATTERY_STYLE_DOTTED_CIRCLE) {
+                int batteryWidth = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_circle_width);
+                int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
+                LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
+                    (int) (batteryWidth * iconScaleFactor), (int) (batteryHeight * iconScaleFactor));
+                scaledLayoutParams.setMargins(0, 0, 0, defaultMarginBottom);
+                mBatteryIconView.setLayoutParams(scaledLayoutParams);
+            }
+        }
 
         // If the battery is marked as overheated, we should display a shield indicating that the
         // battery is being "defended".
@@ -613,7 +1280,6 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         float fullBatteryIconWidth =
                 BatterySpecs.getFullBatteryWidth(mainBatteryWidth, displayShield);
 
-        int marginTop;
         if (displayShield) {
             // If the shield is displayed, we need some extra marginTop so that the bottom of the
             // main icon is still aligned with the bottom of all the other system icons.
@@ -626,30 +1292,18 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         } else {
             marginTop = 0;
         }
-        
-        int marginBottom = res.getDimensionPixelSize(R.dimen.battery_margin_bottom);
-
-        LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
-                Math.round(fullBatteryIconWidth),
-                Math.round(fullBatteryIconHeight));
-        scaledLayoutParams.setMargins(0, marginTop, 0, marginBottom);
-
-        mAccessorizedDrawable.setDisplayShield(displayShield);
-        mBatteryIconView.setLayoutParams(scaledLayoutParams);
-        mBatteryIconView.invalidateDrawable(mAccessorizedDrawable);
     }
 
     private void updateDrawable() {
         switch (getBatteryStyle()) {
             case BATTERY_STYLE_PORTRAIT:
-                mBatteryIconView.setImageDrawable(mAccessorizedDrawable);
+                mBatteryIconView.setImageDrawable(mThemedDrawable);
                 mBatteryIconView.setVisibility(View.VISIBLE);
                 break;
             case BATTERY_STYLE_CIRCLE:
             case BATTERY_STYLE_DOTTED_CIRCLE:
                 mCircleDrawable.setMeterStyle(getBatteryStyle());
                 mBatteryIconView.setImageDrawable(mCircleDrawable);
-                mBatteryIconView.setVisibility(View.VISIBLE);
                 break;
             case BATTERY_STYLE_LANDSCAPEA:
                 mBatteryIconView.setImageDrawable(mLandscapeBatteryA);
@@ -741,6 +1395,7 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
     public void updateColors(int foregroundColor, int backgroundColor, int singleToneColor) {
         mAccessorizedDrawable.setColors(foregroundColor, backgroundColor, singleToneColor);
         mCircleDrawable.setColors(foregroundColor, backgroundColor, singleToneColor);
+        mThemedDrawable.setColors(foregroundColor, backgroundColor, singleToneColor);
         mLandscapeBatteryA.setColors(foregroundColor, backgroundColor, singleToneColor);
         mLandscapeBatteryB.setColors(foregroundColor, backgroundColor, singleToneColor);
         mLandscapeBatteryC.setColors(foregroundColor, backgroundColor, singleToneColor);
@@ -764,11 +1419,15 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
         if (mUnknownStateDrawable != null) {
             mUnknownStateDrawable.setTint(singleToneColor);
         }
+        
+        if (mChargingIconView != null) {
+            mChargingIconView.setImageTintList(android.content.res.ColorStateList.valueOf(singleToneColor));
+        }
     }
 
     public void dump(PrintWriter pw, String[] args) {
-        String powerSave = mAccessorizedDrawable == null ?
-                null : mAccessorizedDrawable.getPowerSaveEnabled() + "";
+        String powerSave = mThemedDrawable == null ?
+                null : mThemedDrawable.getPowerSaveEnabled() + "";
         CharSequence percent = mBatteryPercentView == null ? null : mBatteryPercentView.getText();
         pw.println("  BatteryMeterView:");
         pw.println("    getPowerSave: " + powerSave);
