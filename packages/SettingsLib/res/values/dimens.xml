@@ -83,6 +83,7 @@
 
     <!-- SignalDrawable -->
     <dimen name="signal_icon_size">15dp</dimen>
+    <dimen name="signal_icon_sizex">15dp</dimen>
 
     <!-- Size of nearby icon -->
     <dimen name="bt_nearby_icon_size">24dp</dimen>

@@ -18,10 +18,13 @@ import android.animation.ArgbEvaluator;
 import android.annotation.IntRange;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
+import android.content.res.Resources;
+import android.database.ContentObserver;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -31,10 +34,16 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.drawable.DrawableWrapper;
+import android.net.Uri;
 import android.os.Handler;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.telephony.CellSignalStrength;
 import android.util.LayoutDirection;
 import android.util.PathParser;
+import android.util.ArraySet;
+import android.util.AttributeSet;
+import android.util.TypedValue;
 
 import com.android.settingslib.R;
 import com.android.settingslib.Utils;
@@ -65,6 +74,8 @@ public class SignalDrawable extends DrawableWrapper {
     private static final int STATE_CARRIER_CHANGE = 3;
 
     private static final long DOT_DELAY = 1000;
+   
+   private SettingObserver mSettingObserver;
 
     private final Paint mForegroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mTransparentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -79,7 +90,12 @@ public class SignalDrawable extends DrawableWrapper {
     private final float mCutoutWidthFraction;
     private final float mCutoutHeightFraction;
     private float mDarkIntensity = -1;
-    private final int mIntrinsicSize;
+    private int mIntrinsicSize;
+    private int mIntrinsicSizex;
+    private boolean ifUseCustom;
+    private int mIntrinsicSizeAy;
+    private int mIntrinsicSizeAx;
+    private Context mcontext;
     private boolean mAnimating;
     private int mCurrentDot;
 
@@ -97,11 +113,13 @@ public class SignalDrawable extends DrawableWrapper {
                 R.color.dark_mode_icon_color_single_tone);
         mLightModeFillColor = Utils.getColorStateListDefaultColor(context,
                 R.color.light_mode_icon_color_single_tone);
-        mIntrinsicSize = context.getResources().getDimensionPixelSize(R.dimen.signal_icon_size);
+        mSettingObserver = new SettingObserver(new Handler(context.getMainLooper()));
         mTransparentPaint.setColor(context.getColor(android.R.color.transparent));
         mTransparentPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         mHandler = new Handler();
+        mcontext = context;
         setDarkIntensity(0);
+        mSettingObserver.observe();
     }
 
     private void updateScaledAttributionPath() {
@@ -116,12 +134,24 @@ public class SignalDrawable extends DrawableWrapper {
 
     @Override
     public int getIntrinsicWidth() {
-        return mIntrinsicSize;
+        if (!ifUseCustom) {
+            return mIntrinsicSizex = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 15,
+                mcontext.getResources().getDisplayMetrics())); 
+        } else { 
+           return mIntrinsicSizex = (int) mIntrinsicSizeAx;
+        }
     }
 
     @Override
     public int getIntrinsicHeight() {
-        return mIntrinsicSize;
+        if (!ifUseCustom) {
+            return mIntrinsicSize = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 15,
+                mcontext.getResources().getDisplayMetrics())); 
+        } else { 
+           return mIntrinsicSize = (int) mIntrinsicSizeAy;
+        }
     }
 
     private void updateAnimation() {
@@ -141,6 +171,7 @@ public class SignalDrawable extends DrawableWrapper {
         updateAnimation();
         setTintList(ColorStateList.valueOf(mForegroundPaint.getColor()));
         invalidateSelf();
+        updateSettings();
         return true;
     }
 
@@ -259,6 +290,40 @@ public class SignalDrawable extends DrawableWrapper {
         updateAnimation();
         return changed;
     }
+    
+    private void updateSettings() {
+        ifUseCustom = Settings.System.getIntForUser(mcontext.getContentResolver(),
+                "IDC_SIGNAL_CUSTOM_DIMENSION", 0,
+                UserHandle.USER_CURRENT) == 1;
+        int mIntrinsicSizeAye = Settings.System.getIntForUser(mcontext.getContentResolver(),
+                "IDC_SIGNAL_HEIGHT", 15,
+                UserHandle.USER_CURRENT);
+            mIntrinsicSizeAy = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, mIntrinsicSizeAye,
+                mcontext.getResources().getDisplayMetrics()));
+        int mIntrinsicSizeAex = Settings.System.getIntForUser(mcontext.getContentResolver(),
+                "IDC_SIGNAL_WIDTH", 15,
+                UserHandle.USER_CURRENT);
+            mIntrinsicSizeAx = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, mIntrinsicSizeAex,
+                mcontext.getResources().getDisplayMetrics()));   
+        if (!ifUseCustom) {
+            mIntrinsicSize = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 15,
+                mcontext.getResources().getDisplayMetrics())); 
+            mIntrinsicSizex = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 15,
+                mcontext.getResources().getDisplayMetrics())); 
+        } else { 
+           mIntrinsicSize = (int) mIntrinsicSizeAy;
+           mIntrinsicSizex = (int) mIntrinsicSizeAx;
+        }
+        invalidateSelf();
+    }
+
+    private void updateCustomDimen() {
+     //unused
+    }
 
     private final Runnable mChangeDot = new Runnable() {
         @Override
@@ -298,5 +363,30 @@ public class SignalDrawable extends DrawableWrapper {
     /** Returns the state representing carrier change with the given number of levels. */
     public static int getCarrierChangeState(int numLevels) {
         return (STATE_CARRIER_CHANGE << STATE_SHIFT) | (numLevels << NUM_LEVEL_SHIFT);
+    }
+    
+    private final class SettingObserver extends ContentObserver {
+        public SettingObserver(Handler handler) {
+            super(handler);
+        }    
+
+        void observe() {
+            ContentResolver resolver = mcontext.getContentResolver();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    "IDC_SIGNAL_CUSTOM_DIMENSION"),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    "IDC_SIGNAL_HEIGHT"),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    "IDC_SIGNAL_WIDTH"),
+                    false, this, UserHandle.USER_ALL);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            super.onChange(selfChange, uri);
+            updateSettings();
+        }
     }
 }

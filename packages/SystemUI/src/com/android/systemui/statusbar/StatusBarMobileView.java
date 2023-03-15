@@ -25,6 +25,7 @@ import static com.android.systemui.statusbar.StatusBarIconView.STATE_ICON;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
+import android.util.TypedValue;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -36,10 +37,12 @@ import android.widget.LinearLayout;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.graph.SignalDrawable;
 import com.android.systemui.DualToneHandler;
+import com.android.systemui.Dependency;
 import com.android.systemui.R;
 import com.android.systemui.plugins.DarkIconDispatcher.DarkReceiver;
 import com.android.systemui.statusbar.phone.StatusBarIconController;
 import com.android.systemui.statusbar.phone.StatusBarSignalPolicy.MobileIconState;
+import com.android.systemui.tuner.TunerService;
 
 import java.util.ArrayList;
 
@@ -47,8 +50,30 @@ import java.util.ArrayList;
  * View group for the mobile icon in the status bar
  */
 public class StatusBarMobileView extends BaseStatusBarFrameLayout implements DarkReceiver,
-        StatusIconDisplayable {
+        StatusIconDisplayable,
+        TunerService.Tunable {
     private static final String TAG = "StatusBarMobileView";
+    
+    private static final String EVL_MOBILE_TYPE_LAYOUT_SWITCH = "system:evl_mobile_type_layout_switch";
+    private static final String EVL_MOBILE_TYPE_ICON_POSITION = "system:evl_mobile_type_icon_position";
+    private static final String EVL_MOBILE_TYPE_PADDING_LEFT = "system:evl_mobile_type_padding_left";
+    private static final String EVL_MOBILE_TYPE_PADDING_RIGHT = "system:evl_mobile_type_padding_right";
+    
+    private static final String IDC_SIGNAL_HEIGHT =
+            "system:" + "IDC_SIGNAL_HEIGHT";     
+    private static final String IDC_SIGNAL_WIDTH =
+            "system:" + "IDC_SIGNAL_WIDTH";
+    private static final String IDC_SIGNAL_CUSTOM_DIMENSION =
+            "system:" + "IDC_SIGNAL_CUSTOM_DIMENSION";
+
+    private boolean evlCustomEnabled;
+    private boolean evlDataPosition;
+    private int evlPaddingLeft;
+    private int evlPaddingRight;
+    
+    private boolean useIdcCustomDimension;           
+    private int idcSignalHeight;
+    private int idcSignalWidth;
 
     /// Used to show etc dots
     private StatusBarIconView mDotView;
@@ -117,6 +142,83 @@ public class StatusBarMobileView extends BaseStatusBarFrameLayout implements Dar
         outRect.right += translationX;
         outRect.top += translationY;
         outRect.bottom += translationY;
+    }
+    
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        updateMobileTypeLayout();
+        Dependency.get(TunerService.class)
+            .addTunable(this, new String[] {
+                            EVL_MOBILE_TYPE_LAYOUT_SWITCH,
+                            EVL_MOBILE_TYPE_ICON_POSITION,
+                            EVL_MOBILE_TYPE_PADDING_LEFT,
+                            EVL_MOBILE_TYPE_PADDING_RIGHT,
+                            IDC_SIGNAL_HEIGHT, 
+                            IDC_SIGNAL_WIDTH, 
+                            IDC_SIGNAL_CUSTOM_DIMENSION
+                        });
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        Dependency.get(TunerService.class).removeTunable(this);
+    }
+
+    @Override
+    public void onTuningChanged(String key, String newValue) {
+        if (EVL_MOBILE_TYPE_LAYOUT_SWITCH.equals(key)) {
+            evlCustomEnabled = TunerService.parseIntegerSwitch(newValue, false);
+            updateMobileTypeLayout();
+        } else if (EVL_MOBILE_TYPE_ICON_POSITION.equals(key)) {
+            evlDataPosition = TunerService.parseIntegerSwitch(newValue, false);
+            updateMobileTypeLayout();
+        } else if (EVL_MOBILE_TYPE_PADDING_LEFT.equals(key)) {
+            int L = TunerService.parseInteger(newValue, 2);
+            evlPaddingLeft = Math.round(TypedValue.applyDimension(
+                                             TypedValue.COMPLEX_UNIT_DIP, L,
+                                             getResources().getDisplayMetrics()));
+            updateMobileTypeLayout();
+        } else if (EVL_MOBILE_TYPE_PADDING_RIGHT.equals(key)) {
+            int R = TunerService.parseInteger(newValue, 1);
+            evlPaddingRight = Math.round(TypedValue.applyDimension(
+                                             TypedValue.COMPLEX_UNIT_DIP, R,
+                                             getResources().getDisplayMetrics()));
+            updateMobileTypeLayout();
+        } else if (IDC_SIGNAL_HEIGHT.equals(key)) {
+            int midcSignalHeight = TunerService.parseInteger(newValue, 15);
+            idcSignalHeight = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, midcSignalHeight,
+                getResources().getDisplayMetrics()));        
+            setMobileSignalWidth(true);
+        } else if (IDC_SIGNAL_WIDTH.equals(key)) {
+            int midcSignalWidth = TunerService.parseInteger(newValue, 15);
+            idcSignalWidth = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, midcSignalWidth,
+                getResources().getDisplayMetrics()));   
+        } else if (IDC_SIGNAL_CUSTOM_DIMENSION.equals(key)) {
+            useIdcCustomDimension = TunerService.parseIntegerSwitch(newValue, false);
+            setMobileSignalWidth(true);
+        }
+    }
+
+    private void updateMobileTypeLayout() {
+        LinearLayout mobileTypeLayout = findViewById(R.id.evl_mobile_type_layout);
+        mobileTypeLayout.setLayoutDirection(evlCustomEnabled && evlDataPosition ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+
+        int defaultLeft = Math.round(TypedValue.applyDimension(
+                                         TypedValue.COMPLEX_UNIT_DIP, 2.0f,
+                                         getResources().getDisplayMetrics()));
+        int defaultRight = Math.round(TypedValue.applyDimension(
+                                          TypedValue.COMPLEX_UNIT_DIP, 1.0f,
+                                          getResources().getDisplayMetrics()));
+
+        if (evlCustomEnabled) {
+            mMobileType.setPadding(evlPaddingLeft, mMobileType.getPaddingTop(), evlPaddingRight, mMobileType.getPaddingBottom());
+        } else {
+            mMobileType.setPadding(defaultLeft, mMobileType.getPaddingTop(), defaultRight, mMobileType.getPaddingBottom());
+        }
     }
 
     @Override
@@ -216,19 +318,38 @@ public class StatusBarMobileView extends BaseStatusBarFrameLayout implements Dar
     }
 
     private void setMobileSignalWidth(boolean small) {
-        if (!small) {
-            final int paddingLimit = mContext.getResources().getDimensionPixelSize(
-                R.dimen.status_bar_mobile_type_padding_limit);
-            final int padding = mMobileTypeSmall.getWidth() < paddingLimit
-                ? mContext.getResources().getDimensionPixelSize(
-                    R.dimen.status_bar_mobile_type_padding)
-                : 0;
+        ViewGroup.LayoutParams p = mMobileSignalType.getLayoutParams();
+        if (small) {
+            if (!useIdcCustomDimension) {
+            p.height = mContext.getResources().getDimensionPixelSize(
+                        R.dimen.status_bar_mobile_signal_height);    
+            p.width = mContext.getResources().getDimensionPixelSize(
+                        R.dimen.status_bar_mobile_signal_width);
+            } else {
+            p.height = (int) idcSignalHeight;        
+            p.width = (int) idcSignalWidth;       
+            }        
+        } else {
+            if (!useIdcCustomDimension) {
+            p.height = mContext.getResources().getDimensionPixelSize(
+                    R.dimen.status_bar_mobile_signal_height_type_height);
+            p.width = mContext.getResources().getDimensionPixelSize(
+                    R.dimen.status_bar_mobile_signal_with_type_width);
+            int paddingLimit = mContext.getResources().getDimensionPixelSize(
+                    R.dimen.status_bar_mobile_type_padding_limit);
+            int padding = mMobileTypeSmall.getWidth() < paddingLimit ?
+                    mContext.getResources().getDimensionPixelSize(R.dimen.status_bar_mobile_type_padding) : 0;
             mMobileTypeSmall.setPadding(padding, 0, 0, 0);
+            } else {
+            p.height = (int) idcSignalHeight;
+            p.width = (int) idcSignalWidth;
+            int paddingLimit = mContext.getResources().getDimensionPixelSize(
+                    R.dimen.status_bar_mobile_type_padding_limit);
+            int padding = mMobileTypeSmall.getWidth() < paddingLimit ?
+                    mContext.getResources().getDimensionPixelSize(R.dimen.status_bar_mobile_type_padding) : 0;
+            mMobileTypeSmall.setPadding(padding, 0, 0, 0); 
+            }
         }
-        final ViewGroup.LayoutParams p = mMobileSignalType.getLayoutParams();
-        p.width = mContext.getResources().getDimensionPixelSize(small
-            ? R.dimen.status_bar_mobile_signal_width
-            : R.dimen.status_bar_mobile_signal_with_type_width);
         mMobileSignalType.setLayoutParams(p);
     }
 
