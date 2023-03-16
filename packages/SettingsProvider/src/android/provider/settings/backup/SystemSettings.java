@@ -90,6 +90,6 @@ public class SystemSettings {
         Settings.System.ENABLE_RIPPLE_EFFECT,
         Settings.System.USE_OLD_MOBILETYPE,
         Settings.System.TORCH_POWER_BUTTON_GESTURE,
-        Settings.System.KEYGUARD_QUICK_TOGGLES,
+        Settings.System.KEYGUARD_QUICK_TOGGLES_NEW,
     };
 }
