@@ -307,6 +307,7 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
     
     private int showHide;
     private int mVolumePersenStyle;
+    private int mVolumeBackgroundStyle;
 
     // Variable to track the default row with which the panel is initially shown
     private VolumeRow mDefaultRow = null;
