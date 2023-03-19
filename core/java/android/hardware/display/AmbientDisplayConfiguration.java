@@ -254,6 +254,10 @@ public class AmbientDisplayConfiguration {
                 && alwaysOnAvailable() && !accessibilityInversionEnabled(user);
     }
 
+    private boolean boolSettingSystem(String name, int user, int def) {
+        return Settings.System.getIntForUser(mContext.getContentResolver(), name, def, user) != 0;
+    }
+
     /**
      * Returns if Always-on-Display functionality is available on the display.
      *
