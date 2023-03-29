@@ -100,6 +100,14 @@
     <!-- Title & summary of notification letting users know that battery saver is now on -->
     <java-symbol type="string" name="battery_saver_on_notification_title" />
     <java-symbol type="string" name="battery_saver_on_notification_summary" />
+    
+    <!-- Settings Restart -->
+    <java-symbol type="string" name="settings_restart_title" />
+    <java-symbol type="string" name="settings_restart_message" />
+
+    <!-- Soft restart dialog -->
+    <java-symbol type="string" name="system_restart_title" />
+    <java-symbol type="string" name="system_restart_message" />
 
     <!-- Pocket Lock -->
     <java-symbol type="layout" name="pocket_lock_view" />
