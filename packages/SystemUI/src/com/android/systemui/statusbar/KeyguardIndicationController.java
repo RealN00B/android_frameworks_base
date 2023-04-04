@@ -195,7 +195,7 @@ public class KeyguardIndicationController {
     private int mBatteryLevel;
     private boolean mBatteryPresent = true;
     private long mChargingTimeRemaining;
-    private int mBatteryCurrentDivider;
+    private int mBatteryChargingCurrentThreshold;
     private String mBiometricErrorMessageToShowOnScreenOn;
     private final Set<Integer> mCoExFaceAcquisitionMsgIdsToShow;
     private final FaceHelpMessageDeferral mFaceAcquiredMessageDeferral;
@@ -285,7 +285,6 @@ public class KeyguardIndicationController {
         mKeyguardLogger = keyguardLogger;
         mScreenLifecycle.addObserver(mScreenObserver);
         mAlternateBouncerInteractor = alternateBouncerInteractor;
-        mBatteryCurrentDivider = 1000;
 
         mFaceAcquiredMessageDeferral = faceHelpMessageDeferral;
         mCoExFaceAcquisitionMsgIdsToShow = new HashSet<>();
@@ -999,7 +998,7 @@ public class KeyguardIndicationController {
             Settings.System.LOCKSCREEN_BATTERY_INFO, 1, UserHandle.USER_CURRENT) == 1;
         if (showbatteryInfo) {
             if (mChargingCurrent > 0) {
-                current = (mChargingCurrent / mBatteryCurrentDivider);
+                current = mChargingCurrent >= 23000 ? mChargingCurrent / 1000 : mChargingCurrent;
                 batteryInfo = batteryInfo + current + "mA";
             }
             if (mChargingVoltage > 0 && mChargingCurrent > 0) {
