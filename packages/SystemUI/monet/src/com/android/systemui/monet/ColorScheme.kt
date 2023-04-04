@@ -221,6 +221,7 @@ class ColorScheme(
     val luminanceFactor: Float = 1f,
     val chromaFactor: Float = 1f,
     val tintBackground: Boolean = false,
+    @ColorInt val customSeed: Int? = null,
     @ColorInt val bgSeed: Int? = null
 ) {
 
@@ -245,10 +246,12 @@ class ColorScheme(
         luminanceFactor: Float = 1f,
         chromaFactor: Float = 1f,
         tintBackground: Boolean = false,
+        customSeed: Int? = null,
         bgSeed: Int? = null
     ):
             this(getSeedColor(wallpaperColors, style != Style.CONTENT),
-                    darkTheme, style, luminanceFactor, chromaFactor, tintBackground, bgSeed)
+                    darkTheme, style, luminanceFactor, chromaFactor, tintBackground,
+                    customSeed, bgSeed)
 
     val allAccentColors: List<Int>
         get() {
@@ -274,13 +277,15 @@ class ColorScheme(
         get() = ColorUtils.setAlphaComponent(if (darkTheme) accent1[2] else accent1[6], 0xFF)
 
     init {
-        val proposedSeedCam = Cam.fromInt(seed)
-        val seedArgb = if (seed == Color.TRANSPARENT) {
+        val proposedSeedCam = Cam.fromInt(if (customSeed == null) seed else customSeed)
+        val seedArgb = if (customSeed == null) {
+            seed
+        } else if (customSeed == Color.TRANSPARENT) {
             GOOGLE_BLUE
         } else if (style != Style.CONTENT && proposedSeedCam.chroma < 5) {
             GOOGLE_BLUE
         } else {
-            seed
+            customSeed
         }
 
         val proposedBgSeedCam = Cam.fromInt(if (bgSeed == null) seed else bgSeed)
