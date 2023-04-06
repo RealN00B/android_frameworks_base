@@ -64,8 +64,7 @@ public class PixelPropsUtils {
             "com.samsung.android.gearnplugin",
             "com.samsung.android.modenplugin",
             "com.samsung.android.neatplugin",
-            "com.samsung.android.waterplugin",
-            "com.snapchat.android"
+            "com.samsung.android.waterplugin"
     };
 
     private static final String[] extraPackagesToChange = {
