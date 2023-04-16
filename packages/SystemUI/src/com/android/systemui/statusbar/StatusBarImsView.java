@@ -22,7 +22,6 @@ import android.graphics.Rect;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -44,9 +43,6 @@ import static com.android.systemui.statusbar.StatusBarIconView.STATE_ICON;
 public class StatusBarImsView extends FrameLayout implements
         StatusIconDisplayable {
     private static final String TAG = "StatusBarImsView";
-
-    /// Used to show etc dots
-    private StatusBarIconView mDotView;
 
     private ImsIconState mState;
     private LinearLayout mImsGroup;
@@ -85,18 +81,6 @@ public class StatusBarImsView extends FrameLayout implements
         mImsGroup = findViewById(R.id.ims_group);
         mVowifiIcon = findViewById(R.id.vowifi_icon);
         mVolteIcon = findViewById(R.id.volte_icon);
-
-        initDotView();
-    }
-
-    private void initDotView() {
-        mDotView = new StatusBarIconView(mContext, mSlot, null);
-        mDotView.setVisibleState(STATE_DOT);
-
-        int width = mContext.getResources().getDimensionPixelSize(R.dimen.status_bar_icon_size);
-        LayoutParams lp = new LayoutParams(width, width);
-        lp.gravity = Gravity.CENTER_VERTICAL | Gravity.START;
-        addView(mDotView, lp);
     }
 
     @Override
@@ -117,17 +101,14 @@ public class StatusBarImsView extends FrameLayout implements
 
         switch (state) {
             case STATE_ICON:
-                mImsGroup.setVisibility(View.VISIBLE);
-                mDotView.setVisibility(View.GONE);
+                setVisibility(View.VISIBLE);
                 break;
             case STATE_DOT:
-                mImsGroup.setVisibility(View.GONE);
-                mDotView.setVisibility(View.VISIBLE);
+                setVisibility(View.GONE);
                 break;
             case STATE_HIDDEN:
             default:
-                mImsGroup.setVisibility(View.GONE);
-                mDotView.setVisibility(View.GONE);
+                setVisibility(View.GONE);
                 break;
         }
     }
@@ -143,37 +124,12 @@ public class StatusBarImsView extends FrameLayout implements
     }
 
     public void applyImsState(ImsIconState state) {
-        boolean requestLayout = false;
-
-        if (state == null) {
-            requestLayout = getVisibility() != View.GONE;
-            setVisibility(View.GONE);
-            mState = null;
-        } else if (mState == null) {
-            requestLayout = true;
-            mState = state;
-            initViewState(state);
-        } else if (!mState.equals(state)) {
-            requestLayout = updateState(state);
-        }
-
-        if (requestLayout) {
-            requestLayout();
-        }
-    }
-
-    private boolean updateState(ImsIconState state) {
-        boolean needsLayout = false;
-
-        if (mState.visible != state.visible
-                || mState.vowifiVisible != state.vowifiVisible
-                || mState.volteVisible != state.volteVisible) {
-            initViewState(state);
-            needsLayout = true;
-        }
-
         mState = state;
-        return needsLayout;
+        if (state == null) {
+            setVisibility(View.GONE);
+        } else {
+            initViewState(state);
+        }
     }
 
     private void initViewState(ImsIconState state) {
@@ -195,7 +151,6 @@ public class StatusBarImsView extends FrameLayout implements
 
     @Override
     public void setDecorColor(int color) {
-        mDotView.setDecorColor(color);
     }
 
     @Override
@@ -203,16 +158,12 @@ public class StatusBarImsView extends FrameLayout implements
         ColorStateList list = ColorStateList.valueOf(color);
         mVolteIcon.setImageTintList(list);
         mVowifiIcon.setImageTintList(list);
-        mDotView.setDecorColor(color);
     }
 
     @Override
     public void onDarkChanged(ArrayList<Rect> areas, float darkIntensity, int tint) {
-        int areaTint = getTint(areas, this, tint);
-        ColorStateList color = ColorStateList.valueOf(areaTint);
+        ColorStateList color = ColorStateList.valueOf(getTint(areas, this, tint));
         mVolteIcon.setImageTintList(color);
         mVowifiIcon.setImageTintList(color);
-        mDotView.setDecorColor(areaTint);
-        mDotView.setIconColor(areaTint, false);
     }
 }
