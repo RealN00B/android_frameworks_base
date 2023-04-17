@@ -132,10 +132,6 @@
     <dimen name="status_bar_battery_icon_width_landscape_n">25.0dip</dimen>
     <dimen name="status_bar_battery_icon_width_landscape_o">22.0dip</dimen>
     
-    <!-- Ambient indication -->
-    <dimen name="ambient_indication_icon_size">20.0dip</dimen>
-    <dimen name="ambient_indication_note_icon_size">14.0dip</dimen>
-    
     <!-- Clear all notifications button -->
     <dimen name="dismiss_all_button_elevation">10dp</dimen>
     <dimen name="dismiss_all_button_height">55dp</dimen>
