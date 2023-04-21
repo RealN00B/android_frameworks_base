@@ -269,10 +269,10 @@ public class PixelPropsUtils {
 
     private static void spoofBuildGms() {
         // Alter build parameters to pixel 2 for avoiding hardware attestation enforcement
-        setBuildField("DEVICE", "walleye");
-        setBuildField("FINGERPRINT", "google/walleye/walleye:8.1.0/OPM1.171019.011/4448085:user/release-keys");
-        setBuildField("MODEL", "Pixel 2");
-        setBuildField("PRODUCT", "walleye");
+        setBuildField("DEVICE", "marlin");
+        setBuildField("FINGERPRINT", "google/marlin/marlin:7.1.2/NJH47F/4146041:user/release-keys");
+        setBuildField("MODEL", "Pixel XL");
+        setBuildField("PRODUCT", "marlin");
         setVersionField("DEVICE_INITIAL_SDK_INT", Build.VERSION_CODES.O);
     }
 
