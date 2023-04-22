@@ -404,11 +404,14 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             String chipStyleUri = "sb_date_bg" + String.valueOf(mShowSBClockBg);
             int resId = getContext().getResources().getIdentifier(chipStyleUri, "drawable", "com.android.systemui");
             mClockView.setBackgroundResource(resId);
-            mClockView.setPadding(10,2,10,2);
+            mClockView.setPadding(14,2,14,2);
+            mClockView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             mCenterClockView.setBackgroundResource(resId);
-            mCenterClockView.setPadding(10,2,10,2);
+            mCenterClockView.setPadding(14,2,14,2);
+            mCenterClockView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             mRightClockView.setBackgroundResource(resId);
-            mRightClockView.setPadding(10,2,10,2);
+            mRightClockView.setPadding(14,2,14,2);
+            mRightClockView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         } else {
             int clockPaddingStart = getResources().getDimensionPixelSize(
                     R.dimen.status_bar_clock_starting_padding);
@@ -424,6 +427,9 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             mCenterClockView.setPaddingRelative(0,0,0,0);
             mRightClockView.setBackgroundResource(0);
             mRightClockView.setPaddingRelative(clockPaddingStart, 0, clockPaddingEnd, 0);
+            mClockView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+            mCenterClockView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+            mRightClockView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         }
     }
 
