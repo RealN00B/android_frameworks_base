@@ -671,9 +671,9 @@ public class QuickStatusBarHeader extends FrameLayout implements TunerService.Tu
                 .addFloat(mQSCarriers, "alpha", 0, 1)
                 // Use statusbar paddings when collapsed,
                 // align with QS when expanded, and animate translation
-                .addFloat(isLayoutRtl() ? mRightLayout : mClockContainer, "translationX",
+                .addFloat(mClockContainer, "translationX",
                     mHeaderPaddingLeft + mStatusBarPaddingStart, 0)
-                .addFloat(isLayoutRtl() ? mClockContainer: mRightLayout, "translationX",
+                .addFloat(mRightLayout, "translationX",
                     -(mHeaderPaddingRight + mStatusBarPaddingEnd), 0)
                 .setListener(new TouchAnimator.ListenerAdapter() {
                     @Override
