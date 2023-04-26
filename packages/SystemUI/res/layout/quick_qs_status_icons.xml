@@ -13,15 +13,15 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:systemui="http://schemas.android.com/apk/res-auto"
     android:id="@+id/quick_qs_status_icons"
     android:layout_width="match_parent"
     android:layout_height="@*android:dimen/quick_qs_offset_height"
     android:clipChildren="false"
     android:clipToPadding="false"
+    android:minHeight="@dimen/qs_header_row_min_height"
     android:clickable="false"
     android:focusable="true"
     android:theme="@style/QSHeaderTheme">
@@ -32,15 +32,15 @@
         android:layout_height="match_parent"
         android:paddingStart="@dimen/status_bar_padding_start"
         android:orientation="horizontal"
+        android:layout_gravity="center_vertical|start"
         android:gravity="center_vertical|start"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         >
+
         <com.android.systemui.statusbar.policy.Clock
             android:id="@+id/clock"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:minHeight="@dimen/qs_header_row_min_height"
             android:gravity="center_vertical|start"
             android:paddingStart="@dimen/status_bar_left_clock_starting_padding"
             android:paddingEnd="@dimen/status_bar_left_clock_end_padding"
@@ -60,49 +60,37 @@
         />
     </LinearLayout>
 
-    <com.android.systemui.statusbar.policy.VariableDateView
-        android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:gravity="center_vertical"
-        android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.QS.Status"
-        systemui:longDatePattern="@string/abbrev_wday_month_day_no_year_alarm"
-        systemui:shortDatePattern="@string/abbrev_month_day_no_year"
-        app:layout_constraintTop_toBottomOf="@+id/clock_container"
-        app:layout_constraintStart_toStartOf="parent"
-    />
+    <include layout="@layout/qs_carrier_group"
+        android:id="@+id/carrier_group"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:minHeight="@dimen/qs_header_row_min_height"
+        android:minWidth="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_gravity="end|center_vertical"
+        android:focusable="false"/>
 
     <View
         android:id="@+id/separator"
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:layout_gravity="center"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-    />
+        />
 
-    <include layout="@layout/qs_carrier_group"
-        android:id="@+id/carrier_group"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:focusable="false"
-        app:layout_constraintTop_toTopOf="@+id/clock"
-        app:layout_constraintBottom_toBottomOf="@+id/clock"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constrainedHeight="true" />
-
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/rightLayout"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_height="match_parent"
+        android:gravity="end"
+        >
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical|end"
         >
         <com.android.systemui.statusbar.phone.StatusIconContainer
             android:id="@+id/statusIcons"
@@ -119,5 +107,6 @@
             android:paddingEnd="2dp" />
 
     </LinearLayout>
+    </FrameLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
