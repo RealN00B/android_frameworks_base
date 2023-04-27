@@ -112,13 +112,12 @@
             <Switch
                 android:id="@+id/bluetooth_toggle"
                 android:contentDescription="@string/turn_on_bluetooth"
-                android:switchMinWidth="@dimen/settingslib_switch_track_width"
+                android:switchMinWidth="45dp"
                 android:layout_gravity="center"
-                android:layout_width="@dimen/settingslib_switch_track_width"
-                android:layout_height="match_parent"
-                android:track="@drawable/settingslib_track_selector"
-                android:thumb="@drawable/settingslib_thumb_selector"
-                android:theme="@style/MainSwitch.Settingslib"/>
+                android:layout_width="wrap_content"
+                android:layout_weight="0"
+                android:layout_height="48dp"
+                style="@style/ScreenRecord.Switch"/>
         </FrameLayout>
 
     </LinearLayout>
