@@ -85,7 +85,7 @@
                         android:prompt="@string/screenrecord_audio_label"/>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"
+                        android:minWidth="45dp"
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:layout_gravity="end"
@@ -121,7 +121,7 @@
                         android:importantForAccessibility="no"/>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"
+                        android:minWidth="45dp"
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:id="@+id/screenrecord_taps_switch"
@@ -164,7 +164,7 @@
                     </LinearLayout>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"
+                        android:minWidth="45dp"
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:id="@+id/screenrecord_stopdot_switch"
@@ -207,7 +207,7 @@
                     </LinearLayout>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"
+                        android:minWidth="45dp"
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:id="@+id/screenrecord_lowquality_switch"
@@ -250,7 +250,7 @@
                     </LinearLayout>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"  
+                        android:minWidth="45dp"  
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:id="@+id/screenrecord_longer_timeout_switch"
@@ -293,7 +293,7 @@
                     </LinearLayout>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"
+                        android:minWidth="45dp"
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:id="@+id/screenrecord_skip_switch"
@@ -336,7 +336,7 @@
                     </LinearLayout>
                     <Switch
                         android:layout_width="wrap_content"
-                        android:minWidth="48dp"
+                        android:minWidth="45dp"
                         android:layout_height="48dp"
                         android:layout_weight="0"
                         android:id="@+id/screenrecord_hevc_switch"
