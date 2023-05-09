@@ -169,6 +169,7 @@ open class ClockEventController @Inject constructor(
     private val configListener = object : ConfigurationController.ConfigurationListener {
         override fun onThemeChanged() {
             clock?.events?.onColorPaletteChanged(resources)
+            updateFontSizes()
             updateColors()
         }
 
@@ -200,6 +201,7 @@ open class ClockEventController @Inject constructor(
                     clock?.animations?.doze(if (isDozing) 1f else 0f)
                 }
             }
+            updateFontSizes()
         }
 
         override fun onTimeFormatChanged(timeFormat: String) {
@@ -263,6 +265,10 @@ open class ClockEventController @Inject constructor(
             resources.getDimensionPixelSize(R.dimen.small_clock_text_size).toFloat())
         clock?.largeClock?.events?.onFontSettingChanged(
             resources.getDimensionPixelSize(R.dimen.large_clock_text_size).toFloat())
+    }
+
+    public fun updateAll() {
+        updateFontSizes()
     }
 
     /**
