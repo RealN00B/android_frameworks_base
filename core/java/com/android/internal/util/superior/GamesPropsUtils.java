@@ -41,6 +41,7 @@ public class GamesPropsUtils extends PixelPropsUtils {
     private static final String MODEL_OP8P = "IN2020";
     private static final String MODEL_OP9P = "LE2123";
     private static final String MODEL_MI11 = "M2102K1G";
+    private static final String MODEL_K30U = "M2006J10C";
 
     private static final Set<String> sRog1Packages = Set.of(
         "com.dts.freefireth",
@@ -56,7 +57,6 @@ public class GamesPropsUtils extends PixelPropsUtils {
 
     private static final Set<String> sOp8pPackages = Set.of(
         "com.tencent.ig",
-        "com.pubg.imobile",
         "com.pubg.krmobile",
         "com.vng.pubgmobile",
         "com.rekoo.pubgm",
@@ -77,6 +77,10 @@ public class GamesPropsUtils extends PixelPropsUtils {
         "com.levelinfinite.hotta.gp",
         "com.tencent.tmgp.sgame"
     );
+    
+    private static final Set<String> sK30UPackages = Set.of(
+        "com.pubg.imobile"
+    );
 
     private static final Map<String, String> sPackagesModelMap = new HashMap<String, String>();
 
@@ -86,7 +90,8 @@ public class GamesPropsUtils extends PixelPropsUtils {
             sXp5Packages,  MODEL_XP5,
             sOp8pPackages, MODEL_OP8P,
             sOp9pPackages, MODEL_OP9P,
-            sMi11Packages, MODEL_MI11
+            sMi11Packages, MODEL_MI11,
+            sK30UPackages, MODEL_K30U
         ).forEach((k, v) -> k.forEach(p -> sPackagesModelMap.put(p, v)));
     }
 
