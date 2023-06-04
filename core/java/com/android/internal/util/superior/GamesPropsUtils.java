@@ -74,12 +74,12 @@ public class GamesPropsUtils extends PixelPropsUtils {
 
     private static final Set<String> sMi11Packages = Set.of(
         "com.ea.gp.apexlegendsmobilefps",
-        "com.levelinfinite.hotta.gp",
-        "com.tencent.tmgp.sgame"
+        "com.levelinfinite.hotta.gp"
     );
     
     private static final Set<String> sK30UPackages = Set.of(
-        "com.pubg.imobile"
+        "com.pubg.imobile",
+        "com.tencent.tmgp.sgame"
     );
 
     private static final Map<String, String> sPackagesModelMap = new HashMap<String, String>();
