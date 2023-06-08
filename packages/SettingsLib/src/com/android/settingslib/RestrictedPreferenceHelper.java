@@ -78,6 +78,7 @@ public class RestrictedPreferenceHelper {
             if (RestrictedLockUtilsInternal.hasBaseUserRestriction(mContext, mAttrUserRestriction,
                     UserHandle.myUserId())) {
                 mAttrUserRestriction = null;
+                attributes.recycle();
                 return;
             }
 
@@ -88,6 +89,7 @@ public class RestrictedPreferenceHelper {
                         (useAdminDisabledSummary.type == TypedValue.TYPE_INT_BOOLEAN
                                 && useAdminDisabledSummary.data != 0);
             }
+            attributes.recycle();
         }
     }
 
