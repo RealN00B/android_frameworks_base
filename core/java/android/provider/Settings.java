@@ -12339,13 +12339,6 @@ public final class Settings {
         public static final String HIDE_DEVELOPER_STATUS = "hide_developer_status";
 
         /**
-         * Whether to spoof device as a high-end model to unlock higher FPS in certain games.
-         * @hide
-         */
-        @Readable
-        public static final String GAMES_DEVICE_SPOOF = "games_device_spoof";
-
-        /**
          * Whether to enable Sleep Mode
          * @hide
          */
