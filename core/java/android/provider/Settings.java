@@ -6442,6 +6442,12 @@ public final class Settings {
          * @hide
          */
         public static final String QS_DUAL_TONE = "qs_dual_tone";
+        
+        /**
+         * Give haptic feedback on brightness slider changes.
+         * @hide
+         */
+        public static final String BRIGHTNESS_SLIDER_HAPTIC_ENABLED = "brightness_slider_haptic_enabled";
 
         /**
          * These are all public system settings
