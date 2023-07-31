@@ -37,12 +37,18 @@ public class PixelPropsUtils {
 
     private static final String SAMSUNG = "com.samsung.android";
 
+    private static final Map<String, Object> propsToChangeS23;
     private static final Map<String, Object> propsToChangeGeneric;
     private static final Map<String, Object> propsToChangeUserdebug;
     private static final Map<String, Object> propsToChangePixel5;
     private static final Map<String, Object> propsToChangePixel7Pro;
     private static final Map<String, Object> propsToChangePixelXL;
     private static final Map<String, ArrayList<String>> propsToKeep;
+    
+    private static final String[] packagesToChangeS23 = {
+            "com.google.android.youtube",
+            "com.google.android.apps.youtube.music",
+    };
 
     private static final String[] packagesToChangePixel7Pro = {
             "com.google.android.apps.wallpaper",
@@ -83,9 +89,7 @@ public class PixelPropsUtils {
             "com.google.android.dialer",
             "com.google.android.euicc",
             "com.google.ar.core",
-            "com.google.android.youtube",
             "com.google.android.apps.youtube.kids",
-            "com.google.android.apps.youtube.music",
             "com.google.android.apps.recorder",
             "com.google.android.apps.wearables.maestro.companion",
             "com.google.android.apps.subscriptions.red",
@@ -139,6 +143,12 @@ public class PixelPropsUtils {
         propsToChangePixelXL.put("PRODUCT", "marlin");
         propsToChangePixelXL.put("MODEL", "Pixel XL");
         propsToChangePixelXL.put("FINGERPRINT", "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys");
+        propsToChangeS23 = new HashMap<>();
+        propsToChangeS23.put("BRAND", "samsung");
+        propsToChangeS23.put("MANUFACTURER", "samsung");
+        propsToChangeS23.put("DEVICE", "dm1q");
+        propsToChangeS23.put("MODEL", "SM-S911B");
+        propsToChangeS23.put("FINGERPRINT", "samsung/dm1qxxx/dm1q:13/TP1A.220624.014/S911BXXS3AWF7:user/release-keys");
     }
 
     private static boolean isGoogleCameraPackage(String packageName){
@@ -179,6 +189,8 @@ public class PixelPropsUtils {
                     propsToChange.putAll(propsToChangeUserdebug);
                 } else if (Arrays.asList(packagesToChangePixelXL).contains(packageName)) {
                     propsToChange.putAll(propsToChangePixelXL);
+                } else if (Arrays.asList(packagesToChangeS23).contains(packageName)) {
+                    propsToChange.putAll(propsToChangeS23);
                 } else {
                     propsToChange.putAll(propsToChangePixel5);
                 }
